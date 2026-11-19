@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>สแกนตัวหนังสือจากวิดีโอ → .srt</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2563eb">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAACXUlEQVR42u3dgYkqQRREUacxhMlANLExLCMTjEBzGDMQRJB+9c6JYO2+1J9d/bvLeXvuBwgxHAGCBkGDoEHQCBoEDYIGQYOgETQIGgQNggZBI2gQNAgaBA2CRtAgaBA0CBoEjaBB0CBoEDQIGkGDoEHQIGgQNIIGQYOgQdAIGgQNMzpW+CLvt9VNTeJyfU399S0z/2lkIQs75pFDzP7VjAlazKKOCVrMoo4JWsyijn2GhtJBW2crbaFB0AgaBA2CBkGDoBE0CBoEXcPsH3YXNKIWNJfrS9iCttYI2lojaGstaKy1oLHWgrbWCNpaI2hRCxqPIILGWgvaWgtb0NYaQVtrQWOtBY21FjTWWtDWGkFb60hHR1CHXzlsocVsoRGyhUbMFhohW2gxY6GFbKERs4VGyBZazFhoIWOhxWyhEbKFRswWWshYaDFjoYVsoRGzhRYyFlrMCBoEjaBB0CBoEDSCdgQIGgQNgoaaQfs1sbXNcn8WGgttpZn13obDIem+hkMi6Z6GwyLpfpbz9txnPzwfpBdyVNBQ/pEDBI2gHQGCBkGDoEHQ9FXyV4F5o+V/qr1jO8RM0nkPh0vSuQ+HStL5+6aQKIJG0CDoH/nAv/OPW2hRO/e4Rw5RO+9P/I8VPEODoEHQ8J3Wf3jzflsfwd/MnSy0mL0+Qbtsr1PQLtnrFTQIGkGDoIvo9uOsbq+35UJ3ueSOP4tu+8iRftld31jxaTssNAgaBA2CRtAgaBA0CBoEjaBB0CBoEDQIGkGDoEHQIGgQNIIGQYOgQdAgaAQNggZBg6BB0AgaCngDe0qyxVTmlTcAAAAASUVORK5CYII=">
+<style>
+:root{--bg:#fff;--fg:#1c1c1e;--mut:#6b6b70;--card:#f4f4f6;--ac:#2563eb;--bd:#d9d9de}
+@media(prefers-color-scheme:dark){:root{--bg:#161618;--fg:#f2f2f4;--mut:#9a9aa2;--card:#222226;--ac:#5b8dfa;--bd:#38383d}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,"Noto Sans Thai",sans-serif}
+main{max-width:860px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:1.5rem;margin:0 0 4px}p.s{color:var(--mut);margin:0 0 20px}
+.card{background:var(--card);border-radius:12px;padding:16px;margin-bottom:16px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:12px}
+label{font-size:.9rem;color:var(--mut)}
+.hint{font-size:.85rem;color:var(--mut);margin-top:8px}
+input,select,button,textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:7px 10px}
+button{cursor:pointer;background:var(--ac);color:#fff;border:0;padding:9px 16px}
+button:disabled{opacity:.5;cursor:default}button.g{background:var(--bg);color:var(--fg);border:1px solid var(--bd)}
+.box{position:relative;display:block;width:fit-content;max-width:100%;margin:12px auto 0;background:#000;border-radius:8px;overflow:hidden}
+video{display:block;max-width:100%;max-height:340px;width:auto;height:auto}
+#rois{position:absolute;inset:0;pointer-events:none}
+.rb{position:absolute;box-sizing:border-box;border:2px dashed #fbbf24;background:rgba(251,191,36,.05);pointer-events:none}
+.rb.act{border:2px solid #f43f5e;background:rgba(244,63,94,.06)}
+.rb.edit{pointer-events:auto;touch-action:none;cursor:move}
+.rtag{position:absolute;left:0;top:0;min-width:16px;text-align:center;background:#d97706;color:#fff;font-size:11px;line-height:16px;padding:0 4px}
+.rb.act .rtag{background:#f43f5e}
+.rh{position:absolute;right:-2px;bottom:-2px;width:28px;height:28px;background:#f43f5e;opacity:.9;border-radius:8px 0 0 0;touch-action:none;cursor:nwse-resize}
+.chips{display:inline-flex;gap:6px;flex-wrap:wrap}
+.chip{padding:6px 12px;background:var(--bg);color:var(--fg);border:1px solid var(--bd)}
+.chip.on{background:#f43f5e;color:#fff;border-color:#f43f5e}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.mcard{background:var(--card);color:var(--fg);border-radius:14px;padding:16px;width:100%;max-width:440px;max-height:85vh;overflow:auto;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.mtext{white-space:pre-wrap;word-break:break-word;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;margin:10px 0;max-height:40vh;overflow:auto}
+.mmeta{font-size:.8rem;color:var(--mut);font-variant-numeric:tabular-nums}
+button.danger{background:#dc2626;color:#fff}
+.titem{border-top:1px solid var(--bd);padding:8px 0;display:flex;gap:8px;align-items:flex-start}
+.titem .mtext{flex:1;margin:0;max-height:90px}
+.updbar{position:fixed;left:12px;right:12px;bottom:12px;background:var(--card);color:var(--fg);border:1px solid var(--ac);border-radius:12px;padding:10px 12px;z-index:55;display:flex;gap:8px;align-items:center;flex-wrap:wrap;box-shadow:0 6px 24px rgba(0,0,0,.35);font-size:.9rem}
+.updbar span{flex:1;min-width:180px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:#222;color:#fff;padding:10px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:.2s;z-index:60;max-width:90%;font-size:.9rem}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.bxtag{font-size:.75rem;color:var(--mut);border:1px solid var(--bd);border-radius:6px;padding:1px 6px}
+.ctl{flex-wrap:nowrap;gap:8px}.ctl button{padding:8px 12px}#seekbar{flex:1;min-width:0;padding:0;accent-color:var(--ac)}#tm{font-size:.8rem;color:var(--mut);white-space:nowrap;font-variant-numeric:tabular-nums}
+#draw{position:absolute;inset:0;display:none;z-index:5;touch-action:none;cursor:crosshair;box-shadow:inset 0 0 0 3px rgba(91,141,250,.9)}
+progress{width:100%;height:10px}
+.cue{display:grid;grid-template-columns:310px 1fr 32px;gap:8px;margin:6px 0;align-items:start}
+@media(max-width:560px){.cue{grid-template-columns:1fr 32px}.cue .t{grid-column:1/-1;padding-top:0}}
+.cue textarea{width:100%;resize:vertical;min-height:40px}
+.t{display:flex;align-items:center;gap:5px;flex-wrap:wrap;font-size:.85rem;color:var(--mut);padding-top:4px}
+.ti{width:84px;padding:5px 6px;font-size:.8rem;font-variant-numeric:tabular-nums}
+.mini{padding:4px 8px;font-size:.8rem;line-height:1.2}
+.tools{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center}
+.spk{width:76px;padding:4px 6px;font-size:.8rem}
+.cue.hl{outline:2px solid var(--ac);outline-offset:3px;border-radius:8px}
+.x{background:none;color:var(--mut);padding:6px}
+#log{font-size:.85rem;color:var(--mut);margin-top:8px;word-break:break-word}
+details.card summary{cursor:pointer;font-weight:600}
+details.card[open] summary{margin-bottom:4px}
+#trpanel .hint,details.card .hint{margin-top:6px}
+.sel{width:22px;height:22px;vertical-align:middle;margin:0 6px 0 0;padding:0}
+.body textarea+textarea{margin-top:6px;border-color:var(--ac)}
+.t span{cursor:pointer}
+#trpanel{border:1px solid var(--bd);border-radius:10px;padding:2px 12px 12px;margin:12px 0}
+#dbg{display:none;max-width:100%;margin-top:8px;border:1px solid var(--bd);border-radius:6px;background:#fff}
+</style>
+</head>
+<body>
+<main>
+<h1>สแกนตัวหนังสือจากวิดีโอ → .srt</h1>
+<button id="installbtn" class="g" style="display:none;margin-bottom:10px">📲 ติดตั้งเป็นแอป</button>
+<p class="s">ประมวลผลในเบราว์เซอร์ของคุณทั้งหมด วิดีโอไม่ถูกอัปโหลดไปไหน (ต้องมีอินเทอร์เน็ตเพื่อโหลดตัว OCR ครั้งแรก)</p>
+
+<details class="card" id="aiset">
+  <summary id="aisum">ตั้งค่า AI</summary>
+  <div class="row">
+    <label>ผู้ให้บริการ
+      <select id="prov"><option value="claude">Claude (Anthropic)</option><option value="gemini">Gemini (Google)</option><option value="grok">Grok (xAI)</option></select></label>
+    <label>โมเดล <input id="model" type="text" style="width:190px" autocomplete="off"></label>
+  </div>
+  <div class="row">
+    <label>API key <input id="apikey" type="password" style="width:250px" autocomplete="off" placeholder="วางคีย์ที่นี่"></label>
+    <label><input type="checkbox" id="remember"> จำคีย์ไว้ในเบราว์เซอร์นี้</label>
+  </div>
+  <div class="row"><button id="aitest" class="g">ทดสอบการเชื่อมต่อ</button><span id="aistat" class="hint" style="margin:0"></span></div>
+  <div class="hint">Grok (xAI): รับภาพได้ จึงใช้อ่านซับ/แปลได้ แต่ถอดเสียงไม่ได้ · ตั้งครั้งเดียว ใช้ได้ 2 อย่าง: (1) <b>แปลข้อความหลังสแกน</b> ใช้ได้กับทุกวิธีสแกน รวมถึง OCR ในเครื่อง (2) โหมดสแกน "OCR + AI ตรวจแก้" ที่ส่งภาพกรอบซับข้อความละ 1 ภาพให้ AI อ่านใหม่ · ข้อความ/ภาพที่ส่งไปจะไปที่ผู้ให้บริการที่เลือก คีย์ถูกส่งตรงจากเบราว์เซอร์ของคุณเท่านั้น และคิดค่าบริการตามบัญชีของคุณ</div>
+</details>
+
+<div class="card">
+  <input type="file" id="file" accept="video/*">
+  <div class="row"><label>นำเข้าซับที่มีอยู่แล้ว (.srt / .vtt / .txt ที่ส่งออกจากที่นี่) เพื่อแก้ไขคู่กับวิดีโอ <input type="file" id="srtfile"></label></div>
+  <div class="box" id="vbox"><video id="v" muted playsinline></video><div id="rois"></div><div id="draw"></div></div>
+  <div class="row ctl">
+    <button id="pp" class="g" disabled>▶</button>
+    <button id="b1" class="g" disabled>−1s</button>
+    <input type="range" id="seekbar" min="0" max="1" step="0.01" value="0" disabled>
+    <button id="f1" class="g" disabled>+1s</button>
+    <button id="mu" class="g" disabled title="เปิด/ปิดเสียงวิดีโอ">🔇</button>
+    <span id="tm">0:00 / 0:00</span>
+  </div>
+  <div class="row">
+    <label>แหล่งข้อมูล
+      <select id="src">
+        <option value="image">อ่านซับที่ฝังในภาพ (OCR)</option>
+        <option value="audio">ถอดเสียงพูดจากวิดีโอ (ไม่มีซับ)</option>
+      </select></label>
+  </div>
+  <div id="imgctl">
+  <div class="hint">เลื่อนวิดีโอ (แถบด้านบนนี้) ไปจุดที่มีซับขึ้น แล้วกด "ลากเลือกพื้นที่ซับ" ลากกรอบให้พอดีเฉพาะบรรทัดซับ (ยิ่งแคบ ขยะยิ่งน้อย) · ถ้าสแกนแล้วพลาดบางประโยค: เลื่อนวิดีโอไปที่ซับนั้นให้เห็นเต็มประโยค แล้วกด "＋ เพิ่มซับตรงนี้" โดยไม่ต้องสแกนใหม่ทั้งหมด · ซับขึ้นพร้อมกันหลายตำแหน่ง: กด "＋ เพิ่มกรอบ" ให้มีกรอบละหนึ่งตำแหน่ง แล้วใช้ "✋ ย้าย/ปรับขนาด" ขยับกรอบได้โดยไม่ต้องลากใหม่ (แตะกรอบเพื่อเลือก ลากตัวกรอบเพื่อย้าย ลากมุมสีแดงเพื่อปรับขนาด)</div>
+  <div class="row">
+    <button id="pick" class="g" disabled>ลากเลือกพื้นที่ซับ</button>
+    <button id="reset" class="g" disabled>รีเซ็ตกรอบ</button>
+    <button id="test" class="g" disabled>ทดสอบเฟรมนี้</button>
+    <button id="addcue" class="g" disabled>＋ เพิ่มซับตรงนี้</button>
+  </div>
+  <div class="row">
+    <span style="font-size:.9rem;color:var(--mut)">กรอบสแกน:</span><span id="chips" class="chips"></span>
+    <button id="addbox" class="g" disabled>＋ เพิ่มกรอบ</button>
+    <button id="delbox" class="g" disabled>🗑 ลบกรอบนี้</button>
+    <button id="editbox" class="g" disabled>✋ ย้าย/ปรับขนาด</button>
+  </div>
+  <div class="row">
+    <label>ภาษา
+      <select id="lang"><option value="eng" selected>อังกฤษ</option><option value="tha+eng">ไทย + อังกฤษ</option><option value="tha">ไทย</option></select></label>
+    <label>ปรับภาพก่อนอ่าน
+      <select id="mode">
+        <option value="outline">ตัวอักษรสีอ่อนมีขอบเข้ม (ซับไม่มีพื้นหลัง)</option>
+        <option value="adapt">ตัวอักษรมีสี/โปร่งแสง (เทียบกับพื้นหลังรอบๆ)</option>
+        <option value="light">ตัวอักษรสีอ่อน (พื้นหลังเรียบ/กล่องดำ)</option>
+        <option value="dark">ตัวอักษรสีเข้ม</option>
+        <option value="raw">ภาพต้นฉบับ (ไม่ปรับ)</option>
+      </select></label>
+    <label>ความมั่นใจต่อคำ <input type="number" id="conf" value="45" min="0" max="95" style="width:65px"></label>
+    <label><input type="checkbox" id="typing" checked> ซับค่อยๆ โผล่ทีละตัว (รวมเป็นประโยคเดียว)</label>
+  </div>
+  <div class="row">
+    <label>วิธีอ่านข้อความ
+      <select id="engine">
+        <option value="local">OCR ในเครื่อง (ฟรี)</option>
+        <option value="ai">OCR + AI ตรวจแก้ (ใช้คีย์ใน "ตั้งค่า AI")</option>
+      </select></label>
+  </div>
+  </div>
+  <div id="audctl" style="display:none">
+    <div class="row">
+      <label>ภาษาในเสียง
+        <select id="alang">
+          <option value="english">English</option><option value="japanese">日本語 Japanese</option><option value="thai">ไทย</option>
+          <option value="korean">한국어 Korean</option><option value="chinese">中文 Chinese</option><option value="auto">ตรวจจับอัตโนมัติ</option>
+        </select></label>
+      <label>วิธีถอดเสียง
+        <select id="aeng">
+          <option value="whisper">Whisper ในเครื่อง (ฟรี)</option>
+          <option value="gemini">AI: Gemini (ใช้คีย์ใน "ตั้งค่า AI")</option>
+        </select></label>
+    </div>
+    <div class="row" id="wrow">
+      <label>ขนาดโมเดล Whisper
+        <select id="wsize">
+          <option value="tiny">tiny (~40MB เร็ว แม่นน้อย)</option>
+          <option value="base" selected>base (~75MB แนะนำ)</option>
+          <option value="small">small (~250MB แม่นกว่า ช้า)</option>
+        </select></label>
+      <label><input type="checkbox" id="wsplit" checked> ตัดกล่องตามประโยค/ช่วงเงียบ (ช่วยไม่ให้หลายคนพูดรวมกล่องเดียว)</label>
+    </div>
+    <div class="row" id="asrow" style="display:none">
+      <label><input type="checkbox" id="aspk"> แยกผู้พูด (AI ประมาณจากเสียง ตัวอักษรผู้พูดอาจไม่ตรงกันข้ามคลิป 4 นาที)</label>
+    </div>
+    <div class="row">
+      <span style="font-size:.9rem;color:var(--mut)">ถอดเสียงเฉพาะช่วง (ใช้เติมประโยคที่ตกหล่น/ถอดซ้ำ) จาก</span>
+      <input id="afrom" class="ti" placeholder="0:00" autocomplete="off"><button id="afromnow" class="g mini" title="ตั้งเป็นเวลาปัจจุบันของวิดีโอ">⏱</button>
+      <span style="color:var(--mut)">ถึง</span>
+      <input id="ato" class="ti" placeholder="+10 วินาที" autocomplete="off"><button id="atonow" class="g mini" title="ตั้งเป็นเวลาปัจจุบันของวิดีโอ">⏱</button>
+      <button id="addaud" class="g" disabled>＋ ถอดช่วงนี้แล้วเพิ่ม</button>
+    </div>
+    <div class="hint" id="anote">ใช้เมื่อวิดีโอไม่มีซับฝังในภาพ ถอดเสียงพูดเป็นข้อความพร้อมเวลา แล้วแปลต่อด้วยปุ่มแปลได้ · Whisper: โหลดโมเดลครั้งแรกต้องมีอินเทอร์เน็ต (ครั้งต่อไปเบราว์เซอร์จำไว้) ประมวลผลในเครื่อง อาจนานกว่าความยาววิดีโอ ควรเสียบชาร์จ · ถ้าไฟล์ใหญ่มาก (หลายร้อย MB) เบราว์เซอร์มือถืออาจแรมไม่พอ</div>
+  </div>
+  <div class="row">
+    <button id="go" disabled>เริ่มสแกน</button>
+    <button id="stop" class="g" disabled>หยุด</button>
+  </div>
+  <div class="row"><progress id="p" value="0" max="1" style="display:none"></progress></div>
+  <div id="log"></div>
+  <canvas id="dbg"></canvas>
+</div>
+
+<div class="card" id="out" style="display:none">
+  <strong>ผลลัพธ์ (แก้ไขข้อความได้ · แตะเวลาเพื่อข้ามไปดูในวิดีโอ)</strong>
+  <div id="trpanel">
+    <div class="row">
+      <label><input type="checkbox" id="selall"> เลือกทั้งหมด</label>
+      <label>แปลเป็น <input id="tlang" list="tl" value="Thai" style="width:130px"></label>
+      <datalist id="tl"><option value="Thai"><option value="English"><option value="Japanese"><option value="Korean"><option value="Chinese"><option value="Indonesian"><option value="Vietnamese"></datalist>
+      <label><input type="checkbox" id="trskip" checked> ข้ามที่แปลแล้ว</label>
+    </div>
+    <div class="row"><label><input type="checkbox" id="trfaith" checked> แปลคำหยาบ/ภาษาผู้ใหญ่ตรงตามต้นฉบับ (ไม่เซ็นเซอร์ ไม่ปล่อยเป็นภาษาเดิม)</label></div>
+    <div class="row"><input id="textra" type="text" style="flex:1;min-width:200px" placeholder="คำแนะนำเพิ่มเติม (ไม่บังคับ) เช่น ชื่อเกม ชื่อตัวละคร น้ำเสียง"></div>
+    <div class="row"><button id="trbtn">แปลข้อความที่เลือก (0)</button></div>
+    <div class="hint" id="trlog">ติ๊กข้อความที่ต้องการด้านล่าง หรือ "เลือกทั้งหมด" แล้วกดแปล · AI จะเห็นบรรทัดก่อนหน้าเป็นบริบทเพื่อให้คำแปลต่อเนื่อง</div>
+  </div>
+  <div class="row" id="trashbar" style="display:none"><button id="undobtn" class="g" style="display:none">↩ ย้อนกลับ</button><button id="trashbtn" class="g">🗑 ถังขยะ (0)</button><span class="hint" id="trhint" style="margin:0">ข้อความที่ลบแล้วกู้คืนได้จากที่นี่</span></div>
+  <div id="cues"></div>
+  <div class="row">
+    <button id="dl">ดาวน์โหลด .srt</button>
+    <button id="dltxt" class="g">ดาวน์โหลด .txt (มีเวลา)</button>
+    <button id="dltr" class="g" style="display:none">.srt คำแปล</button>
+    <button id="dlbi" class="g" style="display:none">.srt สองภาษา</button>
+  </div>
+</div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<script>
+const COLOR_HINT=' · ถ้าซับไม่ใช่สีขาว (เช่น ส้ม เหลือง ม่วง) ให้เปลี่ยน "ปรับภาพก่อนอ่าน" เป็น "ตัวอักษรมีสี/โปร่งแสง"';
+// ===== ตั้งค่าคงที่ =====
+const STEP_MS=250;       // สแกนทุกกี่มิลลิวินาที
+const MAX_MISS=2;        // ยอมให้อ่านไม่เจอติดกันกี่เฟรมก่อนตัด cue
+const MIN_CUE_MS=500;    // cue ที่สั้นกว่านี้ถือเป็นขยะ ตัดทิ้ง
+const GAP_MS=300;        // cue ที่เว้นห่างไม่เกินนี้และข้อความต่อเนื่อง จะรวมกัน
+// --- โหมด "ตัวอักษรสีอ่อนมีขอบเข้ม" ---
+const WHITE_MIN=220;     // ความสว่างขั้นต่ำของตัวอักษรขาว (0-255)
+const SAT_MAX=70;        // ตัวอักษรต้องไม่ฉูดฉาด: max(R,G,B)-min(R,G,B) ไม่เกินนี้
+const DARK_MAX=90;       // พิกเซลที่มืดกว่านี้นับเป็น "ขอบเข้ม"
+const BLOB_MAX=0.03;
+const ADAPT_DELTA=20;    // โหมดเทียบพื้นหลัง: ตัวอักษรต้องสว่างกว่าค่าเฉลี่ยรอบๆ อย่างน้อยเท่านี้ (ลดถ้าซับจางมาก)     // ก้อนสีขาวที่ใหญ่เกินสัดส่วนนี้ของภาพ ไม่ใช่ตัวอักษร (เช่น เสื้อ/ผิวขาว)
+// ========================
+const $=id=>document.getElementById(id);
+const v=$('v'),log=m=>$('log').textContent=m;
+let cues=[],stopFlag=false,name='subtitle',srcUrl=null,curFile=null;
+const boxes=[{x:0,y:70,w:100,h:30}];   // กรอบสแกน (หน่วย % ของภาพ) — มีได้หลายกรอบ
+let active=0,R=boxes[0],prevR=null,edit=false;   // R = กรอบที่เลือกอยู่
+
+/* ---------- เลือกไฟล์ ---------- */
+function setBusy(b){
+  $('go').disabled=b;$('stop').disabled=!b;$('test').disabled=b;$('pick').disabled=b;$('reset').disabled=b;
+  ['pp','b1','f1','seekbar','addcue','mu','addbox','editbox','addaud'].forEach(id=>$(id).disabled=b);
+  $('delbox').disabled=b||boxes.length<2;
+  if(b) stopCuePlay();
+}
+$('file').onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  name=f.name.replace(/\.[^.]+$/,'');curFile=f;
+  if(srcUrl) URL.revokeObjectURL(srcUrl);
+  setBusy(true);$('stop').disabled=true;
+  v.onloadedmetadata=()=>{setBusy(false);$('stop').disabled=true;roi();log('ความยาว '+fmt(v.duration).slice(0,8))};
+  v.onerror=()=>log('เปิดไฟล์วิดีโอนี้ไม่ได้ (เบราว์เซอร์อาจไม่รองรับ codec)');
+  srcUrl=URL.createObjectURL(f);
+  v.src=srcUrl;
+};
+
+/* ---------- กรอบสแกน (หลายกรอบ ลาก/ย้าย/ปรับขนาดได้) ---------- */
+const dr=$('draw');let st=null,drag=null;
+function setActive(i){active=Math.max(0,Math.min(boxes.length-1,i));R=boxes[active];renderBoxes();}
+function renderBoxes(){
+  const lay=$('rois');lay.innerHTML='';
+  boxes.forEach((b,i)=>{
+    const d=document.createElement('div');
+    d.className='rb'+(i===active?' act':'')+(edit?' edit':'');
+    Object.assign(d.style,{left:b.x+'%',top:b.y+'%',width:b.w+'%',height:b.h+'%'});
+    const tg=document.createElement('span');tg.className='rtag';tg.textContent=boxes.length>1?String(i+1):'';
+    if(boxes.length>1) d.append(tg);
+    if(edit){
+      d.onpointerdown=e=>startDrag(e,i,'move',d);
+      if(i===active){const h=document.createElement('div');h.className='rh';h.onpointerdown=e=>startDrag(e,i,'size',d);d.append(h);}
+    }
+    lay.append(d);
+  });
+  const ch=$('chips');ch.innerHTML='';
+  boxes.forEach((b,i)=>{const c=document.createElement('button');c.className='chip'+(i===active?' on':'');c.textContent=String(i+1);c.onclick=()=>setActive(i);ch.append(c);});
+  $('delbox').disabled=boxes.length<2||$('go').disabled;
+  $('editbox').textContent=edit?'✔ เสร็จ':'✋ ย้าย/ปรับขนาด';
+}
+function roi(){renderBoxes();}
+// ย้าย/ปรับขนาดกรอบ: แตะกรอบที่ยังไม่ได้เลือกเพื่อเลือก → ลากตัวกรอบเพื่อย้าย ลากมุมเพื่อปรับขนาด
+function startDrag(e,i,kind,el){
+  e.preventDefault();e.stopPropagation();
+  if(i!==active&&kind==='move'){setActive(i);return;}
+  const r=$('rois').getBoundingClientRect();
+  drag={i,kind,el,x0:e.clientX,y0:e.clientY,b:{...boxes[i]},W:r.width||1,H:r.height||1};
+}
+window.addEventListener('pointermove',e=>{
+  if(!drag) return;
+  const dx=(e.clientX-drag.x0)/drag.W*100,dy=(e.clientY-drag.y0)/drag.H*100,o=drag.b,b=boxes[drag.i];
+  const cl=(x,a,z)=>Math.min(z,Math.max(a,x));
+  if(drag.kind==='move'){b.x=cl(o.x+dx,0,100-o.w);b.y=cl(o.y+dy,0,100-o.h);}
+  else{b.w=cl(o.w+dx,5,100-o.x);b.h=cl(o.h+dy,2,100-o.y);}
+  Object.assign(drag.el.style,{left:b.x+'%',top:b.y+'%',width:b.w+'%',height:b.h+'%'});
+});
+const endDrag=()=>{if(drag){drag=null;previewCrop();}};
+window.addEventListener('pointerup',endDrag);window.addEventListener('pointercancel',endDrag);
+$('addbox').onclick=()=>{
+  const a=R,h=Math.min(a.h,20);let y=a.y+a.h+2;if(y+h>98) y=Math.max(0,a.y-h-2);
+  boxes.push({x:a.x,y,w:a.w,h});edit=true;setActive(boxes.length-1);previewCrop();
+};
+$('delbox').onclick=()=>{if(boxes.length<2) return;boxes.splice(active,1);setActive(Math.min(active,boxes.length-1));};
+$('editbox').onclick=()=>{edit=!edit;renderBoxes();};
+
+const pt=e=>{const b=dr.getBoundingClientRect();
+  return {x:Math.min(100,Math.max(0,(e.clientX-b.left)/b.width*100)),y:Math.min(100,Math.max(0,(e.clientY-b.top)/b.height*100))};};
+function endDraw(){st=null;dr.style.display='none';$('pick').textContent='ลากเลือกพื้นที่ซับ';}
+$('pick').onclick=()=>{v.pause();prevR={...R};dr.style.display='block';$('pick').textContent='ลากบนวิดีโอ…';};
+dr.onpointerdown=e=>{st=pt(e);dr.setPointerCapture(e.pointerId);Object.assign(R,{x:st.x,y:st.y,w:0,h:0});roi();};
+dr.onpointermove=e=>{if(!st)return;const p=pt(e);
+  Object.assign(R,{x:Math.min(st.x,p.x),y:Math.min(st.y,p.y),w:Math.abs(p.x-st.x),h:Math.abs(p.y-st.y)});roi();};
+function previewCrop(){
+  try{
+    const {c,x,sx,sy,sw,sh}=setupCanvas();
+    x.drawImage(v,sx,sy,sw,sh,0,0,c.width,c.height);showDbg(c);
+    log((boxes.length>1?'กรอบ '+(active+1)+': ':'กรอบ: ')+'กว้าง '+Math.round(R.w)+'% สูง '+Math.round(R.h)+'% — ภาพด้านล่างคือส่วนที่จะถูกสแกน (ซับต้องอยู่ในภาพนี้ครบทุกบรรทัด)');
+  }catch(e){}
+}
+dr.onpointerup=()=>{
+  if(!st)return;
+  const tooSmall=R.w<10||R.h<2.5;
+  if(tooSmall)Object.assign(R,prevR);
+  roi();endDraw();
+  if(tooSmall)log('กรอบเล็กเกินไป จึงใช้กรอบเดิม — ลากใหม่ให้ครอบทั้งบรรทัดซับ');else previewCrop();
+};
+dr.onpointercancel=()=>{if(prevR)Object.assign(R,prevR);roi();endDraw();};
+$('reset').onclick=()=>{Object.assign(R,{x:0,y:70,w:100,h:30});roi();previewCrop();};
+roi();
+
+/* ---------- ตัวควบคุมวิดีโอของเราเอง (อยู่ใต้วิดีโอ ไม่บังซับ) ---------- */
+const fmtS=t=>{t=Math.max(0,t||0);return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');};
+const sb=$('seekbar');let dragging=false;
+function tick(){
+  sb.max=v.duration||1;
+  if(!dragging) sb.value=v.currentTime||0;
+  $('tm').textContent=fmtS(v.currentTime)+' / '+fmtS(v.duration);
+  $('pp').textContent=v.paused?'▶':'⏸';
+}
+['timeupdate','play','pause','seeked','loadedmetadata'].forEach(e=>v.addEventListener(e,tick));
+$('pp').onclick=()=>{v.paused?v.play():v.pause();};
+$('b1').onclick=()=>{v.currentTime=Math.max(0,v.currentTime-1);};
+$('f1').onclick=()=>{v.currentTime=Math.min(v.duration||0,v.currentTime+1);};
+sb.onpointerdown=()=>{dragging=true;};
+sb.oninput=()=>{v.currentTime=+sb.value;};
+['change','pointerup','pointercancel'].forEach(e=>sb.addEventListener(e,()=>{dragging=false;}));
+v.onclick=()=>{if($('draw').style.display!=='block'){v.paused?v.play():v.pause();}};
+const syncMute=()=>{$('mu').textContent=v.muted?'🔇':'🔊';};
+$('mu').onclick=()=>{v.muted=!v.muted;syncMute();};
+v.addEventListener('volumechange',syncMute);
+
+/* ---------- ตัวช่วย ---------- */
+function seek(t){
+  return new Promise(res=>{
+    if(Math.abs(v.currentTime-t)<0.001){setTimeout(res,30);return;}
+    let to;
+    const done=()=>{v.removeEventListener('seeked',done);clearTimeout(to);setTimeout(res,40);};
+    to=setTimeout(done,5000);
+    v.addEventListener('seeked',done);
+    v.currentTime=t;
+  });
+}
+function clean(s,th){
+  s=s.replace(/\n+/g,' ').trim();
+  if(th) s=s.replace(/([\u0E00-\u0E7F])\s+(?=[\u0E00-\u0E7F])/g,'$1');
+  return s.replace(/\s{2,}/g,' ');
+}
+// ตัดคำขยะที่หัว/ท้ายประโยค เช่น "7 1", "1/ i.", "_4", "9%" (คำที่ไม่มีตัวอักษร 2 ตัวขึ้นไป ยกเว้น I / A / a)
+function isWord(t){
+  const core=t.replace(/[^\p{L}\p{M}\p{N}]/gu,'');
+  return /[\p{L}\p{M}]{2,}/u.test(t.replace(/['’]/g,''))||/^[IAa]$/.test(core);
+}
+function stripEdges(s){
+  const a=s.split(/\s+/).filter(Boolean);
+  let i=0,j=a.length;
+  while(i<j&&!isWord(a[i]))i++;
+  while(j>i&&!isWord(a[j-1]))j--;
+  return a.slice(i,j).join(' ');
+}
+// เก็บเฉพาะคำที่ OCR มั่นใจพอ และมีตัวอักษร/ตัวเลขจริง (ตัดขยะอย่าง "| ? ) ®" ทิ้ง)
+// ยกเว้นคำสั้นอย่าง "I" ที่ Tesseract มักให้ความมั่นใจต่ำ (หรืออ่านเป็น | หรือ l) → เก็บไว้ถ้าความสูงเท่าตัวอักษรอื่นในบรรทัด
+const LONE_I=/^([|lI])([^\p{L}\p{N}]*)$/u;
+function extract(data,th,wconf){
+  if(!data.lines) return fixI(clean(data.text||'',th));
+  const out=[];
+  for(const ln of data.lines){
+    const words=(ln.words||[]).filter(w=>w.text&&w.text.trim());
+    const hs=words.filter(w=>w.confidence>=wconf&&w.bbox).map(w=>w.bbox.y1-w.bbox.y0).sort((a,b)=>a-b);
+    const med=hs.length?hs[hs.length>>1]:0;
+    const ws=[];
+    for(const w of words){
+      const t=w.text.trim(),m=LONE_I.exec(t);
+      if(m&&med&&w.bbox){
+        const h=w.bbox.y1-w.bbox.y0;
+        if(w.confidence>=10&&h>=0.7*med&&h<=1.7*med){ws.push('I'+m[2]);continue;}
+      }
+      if(w.confidence>=wconf&&/[\p{L}\p{N}]/u.test(t)) ws.push(t);
+    }
+    if(ws.length) out.push(ws.join(' '));
+  }
+  return fixI(clean(out.join(' '),th));
+}
+// l'm / |'ll / l'd / l've ที่จริงคือ I'm / I'll / I'd / I've
+function fixI(s){return s.replace(/(^|\s)[l|](?=['’](?:m|ll|d|ve)\b)/g,'$1I');}
+function norm(s){return s.toLowerCase().replace(/[^\p{L}\p{N}]/gu,'');}
+function sim(a,b){
+  if(a===b) return 1; if(a.length<2||b.length<2) return 0;
+  const g=s=>{const m=new Map();for(let i=0;i<s.length-1;i++){const k=s.slice(i,i+2);m.set(k,(m.get(k)||0)+1)}return m};
+  const A=g(a),B=g(b);let c=0;for(const[k,n]of A)c+=Math.min(n,B.get(k)||0);
+  return 2*c/(a.length+b.length-2);
+}
+// ข้อความใหม่ "ต่อเนื่อง" จากข้อความเดิมไหม (รวมกรณีค่อยๆ พิมพ์ทีละตัว)
+function same(a0,b0,typing){
+  const a=norm(a0),b=norm(b0);
+  if(!a||!b) return false;
+  if(sim(a,b)>0.8) return true;
+  const [sh,lg]=a.length<=b.length?[a,b]:[b,a];
+  if(sh.length>=6&&lg.includes(sh)) return true;
+  if(!typing) return false;
+  if(b.length>a.length&&a.length>=2){
+    if(a.length>=3&&b.includes(a)) return true;
+    return sim(a,b.slice(0,a.length))>0.75;
+  }
+  if(b.length<a.length&&b.length>=a.length*0.7)
+    return sim(b,a.slice(0,b.length))>0.75;
+  return false;
+}
+function fmt(t){const ms=Math.round(t*1000);const p=(n,l=2)=>String(n).padStart(l,'0');
+  return `${p(Math.floor(ms/3600000))}:${p(Math.floor(ms/60000)%60)}:${p(Math.floor(ms/1000)%60)},${p(ms%1000,3)}`;}
+
+/* ---------- ประมวลผลภาพ ---------- */
+// ขยายพิกเซลที่เป็น 1 ออกไป r พิกเซล (แนวนอนแล้วแนวตั้ง)
+function dilate(src,W,H,r){
+  const tmp=new Uint8Array(W*H),out=new Uint8Array(W*H);
+  for(let y=0;y<H;y++){const row=y*W;
+    for(let x=0;x<W;x++){ if(!src[row+x]) continue;
+      for(let k=Math.max(0,x-r),e=Math.min(W-1,x+r);k<=e;k++) tmp[row+k]=1; }}
+  for(let y=0;y<H;y++){
+    for(let x=0;x<W;x++){ if(!tmp[y*W+x]) continue;
+      for(let k=Math.max(0,y-r),e=Math.min(H-1,y+r);k<=e;k++) out[k*W+x]=1; }}
+  return out;
+}
+// แยกก้อนพิกเซลที่ติดกัน แล้วลบก้อนที่ไม่น่าใช่ตัวอักษร:
+//  - ใหญ่เกิน maxArea (เสื้อ/ผิวขาว)
+//  - สูงและแคบผิดปกติเมื่อเทียบกับความสูงตัวอักษรทั่วไป (เส้นลายเส้นในฉาก)
+function cleanBlobs(mask,W,H,maxArea){
+  const seen=new Uint8Array(W*H),q=new Int32Array(W*H),comps=[];
+  let head=0,tail=0;
+  for(let s0=0;s0<W*H;s0++){
+    if(!mask[s0]||seen[s0]) continue;
+    const start=tail;q[tail++]=s0;seen[s0]=1;
+    let x0=W,x1=0,y0=H,y1=0;
+    while(head<tail){
+      const p=q[head++],px=p%W,py=(p-px)/W;
+      if(px<x0)x0=px;if(px>x1)x1=px;if(py<y0)y0=py;if(py>y1)y1=py;
+      for(let dy=-1;dy<=1;dy++){const ny=py+dy;if(ny<0||ny>=H)continue;
+        for(let dx=-1;dx<=1;dx++){const nx=px+dx;if(nx<0||nx>=W)continue;
+          const n=ny*W+nx;if(mask[n]&&!seen[n]){seen[n]=1;q[tail++]=n;}}}
+    }
+    comps.push({start,end:tail,w:x1-x0+1,h:y1-y0+1});
+  }
+  // ความสูงตัวอักษรทั่วไป = ควอนไทล์ที่ 35% ถ่วงน้ำหนักด้วยพื้นที่ (ตัวอักษรเตี้ยกว่าเส้นลายเส้น และมีพื้นที่รวมมาก)
+  const ok=comps.filter(c=>c.end-c.start<=maxArea).sort((a,b)=>a.h-b.h);
+  let total=0;for(const c of ok) total+=c.end-c.start;
+  let acc=0,med=0;
+  for(const c of ok){acc+=c.end-c.start;if(acc>=total*0.35){med=c.h;break;}}
+  for(const c of comps){
+    const bad=(c.end-c.start>maxArea)||(med&&c.h>2.2*med&&c.w<0.5*c.h);
+    if(bad) for(let k=c.start;k<c.end;k++) mask[q[k]]=0;
+  }
+}
+// เก็บเฉพาะพิกเซล "ขาว และอยู่ติดขอบเข้ม" = ตัวอักษรซับที่มีขอบ (เหมือนที่ VideoSubFinder ทำ)
+function outlineMask(x,c){
+  const W=c.width,H=c.height,N=W*H,im=x.getImageData(0,0,W,H),d=im.data;
+  const white=new Uint8Array(N),dark=new Uint8Array(N);
+  for(let i=0,p=0;p<N;i+=4,p++){
+    const r=d[i],g=d[i+1],b=d[i+2],l=(r*299+g*587+b*114)/1000;
+    if(l>=WHITE_MIN&&Math.max(r,g,b)-Math.min(r,g,b)<=SAT_MAX) white[p]=1;
+    else if(l<=DARK_MAX) dark[p]=1;
+  }
+  const near=dilate(dark,W,H,Math.min(7,Math.max(3,Math.round(H/30))));
+  const text=new Uint8Array(N);
+  for(let p=0;p<N;p++) if(white[p]&&near[p]) text[p]=1;
+  cleanBlobs(text,W,H,Math.round(N*BLOB_MAX));
+  const out=dilate(text,W,H,1);
+  for(let i=0,p=0;p<N;i+=4,p++){const val=out[p]?0:255;d[i]=d[i+1]=d[i+2]=val;d[i+3]=255;}
+  x.putImageData(im,0,0);
+}
+// ตัวอักษรมีสี/โปร่งแสง: เก็บพิกเซลที่ "สว่างกว่าค่าเฉลี่ยรอบๆ" (ใช้ความสว่างสูงสุดของ R,G,B ทำให้สีม่วง/ชมพูสดไม่หลุด)
+function adaptMask(x,c){
+  const W=c.width,H=c.height,N=W*H,im=x.getImageData(0,0,W,H),d=im.data;
+  const g=new Float32Array(N);
+  for(let i=0,p=0;p<N;i+=4,p++) g[p]=Math.max(d[i],d[i+1],d[i+2]);
+  const S=new Float64Array((W+1)*(H+1));          // integral image
+  for(let y=0;y<H;y++){let row=0;for(let xx=0;xx<W;xx++){row+=g[y*W+xx];S[(y+1)*(W+1)+xx+1]=S[y*(W+1)+xx+1]+row;}}
+  const r=Math.min(80,Math.max(8,Math.round(H*0.6))),text=new Uint8Array(N);
+  for(let y=0;y<H;y++){
+    const y0=Math.max(0,y-r),y1=Math.min(H,y+r+1);
+    for(let xx=0;xx<W;xx++){
+      const x0=Math.max(0,xx-r),x1=Math.min(W,xx+r+1);
+      const sum=S[y1*(W+1)+x1]-S[y0*(W+1)+x1]-S[y1*(W+1)+x0]+S[y0*(W+1)+x0];
+      if(g[y*W+xx]-sum/((x1-x0)*(y1-y0))>ADAPT_DELTA) text[y*W+xx]=1;
+    }
+  }
+  cleanBlobs(text,W,H,Math.round(N*BLOB_MAX));
+  const out=dilate(text,W,H,1);
+  for(let i=0,p=0;p<N;i+=4,p++){const val=out[p]?0:255;d[i]=d[i+1]=d[i+2]=val;d[i+3]=255;}
+  x.putImageData(im,0,0);
+}
+function binarize(x,c,mode){
+  if(mode==='outline'){outlineMask(x,c);return;}
+  if(mode==='adapt'){adaptMask(x,c);return;}
+  const im=x.getImageData(0,0,c.width,c.height),d=im.data,n=d.length/4,hist=new Uint32Array(256);
+  for(let i=0;i<d.length;i+=4){const g=(d[i]*299+d[i+1]*587+d[i+2]*114)/1000|0;d[i]=g;hist[g]++;}
+  let sum=0;for(let i=0;i<256;i++)sum+=i*hist[i];
+  let sB=0,wB=0,max=0,th=128;
+  for(let i=0;i<256;i++){
+    wB+=hist[i]; if(!wB) continue;
+    const wF=n-wB; if(!wF) break;
+    sB+=i*hist[i];
+    const mB=sB/wB,mF=(sum-sB)/wF,b=wB*wF*(mB-mF)*(mB-mF);
+    if(b>max){max=b;th=i;}
+  }
+  if(mode==='light') th=Math.max(th,150);
+  for(let i=0;i<d.length;i+=4){
+    const on=mode==='light'?d[i]>th:d[i]<=th;
+    const val=on?0:255;d[i]=d[i+1]=d[i+2]=val;d[i+3]=255;
+  }
+  x.putImageData(im,0,0);
+}
+function signature(c,sx){
+  sx.drawImage(c,0,0,160,40);
+  const d=sx.getImageData(0,0,160,40).data,out=new Uint8Array(160*40);
+  for(let i=0,j=0;i<d.length;i+=4,j++) out[j]=(d[i]*299+d[i+1]*587+d[i+2]*114)/1000;
+  return out;
+}
+function sameSig(a,b){
+  if(!a||!b) return false;
+  let n=0;for(let i=0;i<a.length;i++) if(Math.abs(a[i]-b[i])>40&&++n>=8) return false;
+  return true;
+}
+function roiPx(b){
+  b=b||R;const w=v.videoWidth,H=v.videoHeight;
+  const sx=Math.min(w-16,Math.round(w*b.x/100)),sy=Math.min(H-16,Math.round(H*b.y/100));
+  return {sx,sy,sw:Math.max(16,Math.min(w-sx,Math.round(w*b.w/100))),sh:Math.max(16,Math.min(H-sy,Math.round(H*b.h/100)))};
+}
+function setupCanvas(b){
+  const g=roiPx(b),scale=Math.min(3,Math.max(1,1400/g.sw,120/g.sh));
+  const c=document.createElement('canvas');c.width=Math.round(g.sw*scale);c.height=Math.round(g.sh*scale);
+  const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingQuality='high';
+  return {c,x,...g};
+}
+function showDbg(c){const d=$('dbg');d.style.display='block';d.width=c.width;d.height=c.height;d.getContext('2d').drawImage(c,0,0);}
+let lastPsm=null;
+async function readFrame(worker,c,x,mode,th,conf){
+  if(mode!=='raw') binarize(x,c,mode);
+  showDbg(c);
+  // โหมดมีขอบ: ภาพถูกล้างแล้ว สั่งให้อ่านทั้งก้อนเป็นข้อความ (PSM 6) ไม่ให้ข้ามบรรทัดที่อยู่ใกล้ลายเส้น
+  const psm=(mode==='outline'||mode==='adapt')?'6':'3';
+  if(psm!==lastPsm){await worker.setParameters({tessedit_pageseg_mode:psm});lastPsm=psm;}
+  const {data}=await worker.recognize(c);
+  const t=stripEdges(extract(data,th,conf));
+  return t.length>=2?t:'';
+}
+
+/* ---------- worker (เก็บไว้ใช้ซ้ำ) ---------- */
+let wk=null,wkLang=null;
+async function dropWorker(){lastPsm=null;if(wk){try{await wk.terminate()}catch(e){}wk=null;wkLang=null;}}
+async function getWorker(lang){
+  if(wk&&wkLang===lang) return wk;
+  await dropWorker();
+  wk=await Tesseract.createWorker(lang,1,{logger:m=>{if(m.status&&m.status.includes('loading'))log('โหลดข้อมูลภาษา… '+Math.round((m.progress||0)*100)+'%')}});
+  wkLang=lang;lastPsm=null;return wk;
+}
+
+/* ---------- AI (ใช้ API) ---------- */
+const AI_DEFAULT={claude:'claude-haiku-5-5',gemini:'gemini-3.5-flash-lite',grok:'grok-4.7'};
+const AI_NAME={claude:'Claude',gemini:'Gemini',grok:'Grok'};
+function aiLoad(){
+  try{
+    const k=JSON.parse(localStorage.getItem('v2srt_ai')||'null');
+    if(k){$('prov').value=k.prov||'claude';$('model').value=k.model||'';$('apikey').value=k.key||'';$('remember').checked=!!k.key;}
+  }catch(e){}
+  if(!$('model').value) $('model').value=AI_DEFAULT[$('prov').value];
+}
+function aiSave(){
+  try{
+    if($('remember').checked) localStorage.setItem('v2srt_ai',JSON.stringify({prov:$('prov').value,model:$('model').value,key:$('apikey').value}));
+    else localStorage.removeItem('v2srt_ai');
+  }catch(e){}
+}
+function needKey(msg){const d=$('aiset');d.open=true;$('aistat').textContent=msg;d.scrollIntoView({behavior:'smooth',block:'start'});}
+$('engine').onchange=()=>{if($('engine').value==='ai'&&!$('apikey').value.trim()) needKey('โหมดสแกนนี้ต้องใช้ API key — ใส่ตรงนี้ก่อน');};
+function aiStatus(){
+  const k=$('apikey').value.trim(),pn=AI_NAME[$('prov').value];
+  $('aisum').textContent=k?'ตั้งค่า AI · '+pn+' · '+($('model').value.trim()||AI_DEFAULT[$('prov').value])+' ✓':'ตั้งค่า AI · ยังไม่ได้ใส่คีย์';
+}
+$('aitest').onclick=async()=>{
+  $('aistat').textContent='กำลังทดสอบ…';
+  try{const r=await aiRaw('Reply with the single word: OK',null,20);$('aistat').textContent='เชื่อมต่อได้ ✓ (AI ตอบ: '+r.slice(0,40)+')';}
+  catch(err){$('aistat').textContent='เชื่อมต่อไม่สำเร็จ: '+(err.message||err);}
+};
+$('prov').onchange=()=>{$('model').value=AI_DEFAULT[$('prov').value];aiSave();aiStatus();};
+['model','apikey','remember'].forEach(id=>{$(id).addEventListener('change',()=>{aiSave();aiStatus();});$(id).addEventListener('input',aiStatus);});
+aiLoad();aiStatus();
+
+// ภาพกรอบซับ (สีเต็ม ไม่ปรับ) เป็น JPEG base64
+function frameJpeg(b){
+  const {sx,sy,sw,sh}=roiPx(b);
+  const k=Math.min(2,Math.max(1,1000/sw));
+  const c=document.createElement('canvas');c.width=Math.round(sw*k);c.height=Math.round(sh*k);
+  const x=c.getContext('2d');x.imageSmoothingQuality='high';
+  x.drawImage(v,sx,sy,sw,sh,0,0,c.width,c.height);
+  return c.toDataURL('image/jpeg',0.88).split(',')[1];
+}
+function cleanAI(t){
+  t=(t||'').replace(/```[a-z]*/gi,'').replace(/\s*\n+\s*/g,' ').trim();
+  t=t.replace(/^["“'‘]+|["”'’]+$/g,'').trim();
+  return /^none\.?$/i.test(t)?'':t;
+}
+// เรียก AI (ข้อความล้วน หรือข้อความ+ภาพ) คืนข้อความตอบกลับ
+async function aiRaw(prompt,b64,maxTok,mime){
+  const prov=$('prov').value,model=$('model').value.trim()||AI_DEFAULT[prov],key=$('apikey').value.trim();
+  if(!key) throw new Error('ยังไม่ได้ใส่ API key');
+  for(let attempt=0;;attempt++){
+    let res;
+    try{
+    if(prov==='claude'){
+      if(mime&&mime.indexOf('audio')===0) throw new Error('Claude ยังรับไฟล์เสียงไม่ได้ — เลือก Gemini ในตั้งค่า AI');
+      const content=b64?[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:b64}},{type:'text',text:prompt}]:[{type:'text',text:prompt}];
+      res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+        headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model,max_tokens:maxTok,messages:[{role:'user',content}]})});
+    }else if(prov==='grok'){
+      if(mime&&mime.indexOf('audio')===0) throw new Error('Grok ยังรับไฟล์เสียงไม่ได้ — ใช้ Gemini หรือ Whisper ในเครื่องแทน');
+      const content=b64?[{type:'image_url',image_url:{url:'data:'+(mime||'image/jpeg')+';base64,'+b64}},{type:'text',text:prompt}]:prompt;
+      res=await fetch('https://api.x.ai/v1/chat/completions',{method:'POST',
+        headers:{'content-type':'application/json','authorization':'Bearer '+key},
+        body:JSON.stringify({model,messages:[{role:'user',content}],temperature:b64?0:0.3,max_completion_tokens:Math.max(maxTok,1024),stream:false})});
+    }else{
+      const parts=b64?[{inline_data:{mime_type:mime||'image/jpeg',data:b64}},{text:prompt}]:[{text:prompt}];
+      res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent',{method:'POST',
+        headers:{'content-type':'application/json','x-goog-api-key':key},
+        body:JSON.stringify({contents:[{parts}],generationConfig:{temperature:b64?0:0.3,maxOutputTokens:Math.max(maxTok,1024)}})});
+    }
+    }catch(e){
+      if(e&&e.name==='TypeError') throw new Error('เชื่อมต่อ '+AI_NAME[prov]+' ไม่ได้ (ไม่มีอินเทอร์เน็ต หรือเบราว์เซอร์บล็อกการเรียกตรง)'+(prov==='grok'?' — xAI อาจไม่อนุญาตให้เรียกจากหน้าเว็บโดยตรง (CORS) ถ้าเป็นแบบนั้น ให้ใช้ Claude หรือ Gemini แทน':''));
+      throw e;
+    }
+    if((res.status===429||res.status>=500)&&attempt<3){await new Promise(r=>setTimeout(r,2000*(attempt+1)));continue;}
+    const j=await res.json().catch(()=>({}));
+    const em=typeof j.error==='string'?j.error:((j.error&&(j.error.message||j.error.type))||j.message||'');
+    if(!res.ok) throw new Error(em||('HTTP '+res.status));
+    if(prov==='claude') return (j.content||[]).map(b=>b.text||'').join('').trim();
+    if(prov==='grok'){const m=((j.choices||[])[0]||{}).message||{},c=m.content;return (Array.isArray(c)?c.map(x=>x.text||'').join(''):(c||'')).trim();}
+    return ((((j.candidates||[])[0]||{}).content||{}).parts||[]).map(x=>x.text||'').join('').trim();
+  }
+}
+async function aiRead(b64,lang){
+  const L=lang==='tha'?'Thai':lang==='eng'?'English':'Thai and/or English';
+  const prompt='This image is a cropped region of a video frame that may contain hard-coded subtitles (language: '+L+'). '
+    +'Transcribe the subtitle text exactly as shown: keep the original spelling, punctuation and capitalization, join multiple lines with a single space, and do not translate, correct or add anything. '
+    +'Ignore anything that is not subtitle text (characters, UI, logos, background art). '
+    +'If there is no subtitle text, reply with exactly: NONE\nOutput only the text.';
+  return aiRaw(prompt,b64,300);
+}
+// แปลเป็นชุด คืน array ข้อความแปล (จำนวนเท่าเดิม) — ถ้าคำตอบอ่านไม่ได้จะโยน error ที่มี .parse=true
+async function aiTranslate(texts,before,target,extra,opt){
+  opt=opt||{};
+  const prompt='You are a professional subtitle localizer working on a fan translation of a video/game. Translate the following numbered subtitle lines into '+target+'.\n'
+    +'They are consecutive subtitles from the same video: use neighbouring lines as context so the translation is natural and consistent (names, tone, who is speaking, pronouns). '
+    +'Translate every item, keep each item separate (do not merge or split items), and leave character names untranslated unless a common translation exists.\n'
+    +(opt.faithful!==false
+      ?'The dialogue may contain profanity, insults, slang, vulgar or sexual language. Translate it faithfully: render every swear word, insult and vulgar or sexual expression as a natural, colloquial '+target+' equivalent of the same strength and register. '
+       +'Never leave such words in the source language, never censor them (no asterisks), and never soften, euphemize, omit, or add notes or warnings.\n'
+      :'Keep the original tone.\n')
+    +(opt.strict?'IMPORTANT: a previous attempt left some swear words untranslated in the source language. Every swear word and vulgar term must be rendered in '+target+'; none may remain in the source language.\n':'')
+    +(opt.speakers?'Speaker label for each item, in the same order (context only, use it for pronouns/politeness/tone; "" = unknown; do not include it in the output): '+JSON.stringify(opt.speakers)+'\n':'')
+    +(extra?'Additional instructions from the user: '+extra+'\n':'')
+    +(before.length?'Preceding lines for context only (do NOT translate or include them): '+JSON.stringify(before)+'\n':'')
+    +'Return ONLY a JSON array of exactly '+texts.length+' strings in the same order, with no commentary and no code fences.\n\n'
+    +'Input: '+JSON.stringify(texts);
+  const out=(await aiRaw(prompt,null,4096)).replace(/```[a-z]*/gi,'');
+  const a=out.indexOf('['),b=out.lastIndexOf(']');
+  const bad=m=>{const e=new Error(m);e.parse=true;return e;};
+  if(a<0||b<a) throw bad('อ่านคำตอบของ AI ไม่ได้');
+  let arr;try{arr=JSON.parse(out.slice(a,b+1));}catch(e){throw bad('อ่านคำตอบของ AI ไม่ได้');}
+  if(!Array.isArray(arr)||arr.length!==texts.length) throw bad('จำนวนบรรทัดที่แปลไม่ตรงกับต้นฉบับ');
+  return arr.map(x=>String(x).trim());
+}
+// ให้ AI อ่านข้อความของแต่ละ cue ใหม่ (ใช้เฟรมช่วงท้าย cue ที่ซับพิมพ์ครบแล้ว)
+async function aiRefine(list,lang,step,p){
+  p.style.display='block';p.value=0;
+  const drop=new Set();let done=0;
+  for(const q of list){
+    if(stopFlag) break;
+    await seek(Math.min(Math.max(q.start,q.end-step*1.5),Math.max(0,v.duration-0.05)));
+    let txt;
+    try{txt=cleanAI(await aiRead(frameJpeg(boxes[(q.bx||1)-1]||R),lang));}
+    catch(err){log('AI ผิดพลาด: '+(err.message||err)+' — ใช้ผลจาก OCR ในเครื่องแทน');return;}
+    if(txt==='') drop.add(q); else q.text=txt;
+    done++;p.value=done/list.length;
+    log(('AI ตรวจ '+done+'/'+list.length+' · '+(txt||'(ไม่พบซับ)')).slice(0,120));
+  }
+  const kept=list.filter(q=>!drop.has(q)),merged=[];
+  for(const q of kept){   // cue ติดกันที่ AI อ่านได้ข้อความเดียวกัน → รวมกัน
+    const l=merged[merged.length-1];
+    if(l&&norm(l.text)===norm(q.text)&&q.start-l.end<=GAP_MS/1000) l.end=Math.max(l.end,q.end);
+    else merged.push(q);
+  }
+  cues=merged;
+}
+
+/* ---------- ทดสอบเฟรมเดียว ---------- */
+$('test').onclick=async()=>{
+  setBusy(true);$('stop').disabled=true;log('กำลังทดสอบเฟรมนี้…');
+  try{
+    const lang=$('lang').value,ai=$('engine').value==='ai',nb=boxes.length;
+    const worker=ai?null:await getWorker(lang);
+    const order=boxes.map((b,k)=>k).filter(k=>k!==active).concat(active);   // กรอบที่เลือกอยู่ไว้ท้ายสุด ภาพตัวอย่างด้านล่างจะเป็นของกรอบนั้น
+    const res={};
+    if(ai) log('กำลังส่งให้ AI…');
+    for(const k of order){
+      const b=boxes[k],{c,x,sx,sy,sw,sh}=setupCanvas(b);
+      x.drawImage(v,sx,sy,sw,sh,0,0,c.width,c.height);
+      if(ai){if(k===active) showDbg(c);res[k]=cleanAI(await aiRead(frameJpeg(b),lang));}   // ภาพที่ส่งให้ AI (สีเต็ม)
+      else res[k]=await readFrame(worker,c,x,$('mode').value,lang.includes('tha'),+$('conf').value||0);
+    }
+    const empty=ai?'(ไม่พบซับ — ลองลากกรอบใหม่)':'(ไม่พบข้อความ — ดูภาพด้านล่างว่ากรอบ/โหมดถูกไหม'+($('mode').value==='outline'?COLOR_HINT:'')+')';
+    log((ai?'AI อ่านได้: ':'ผลที่อ่านได้: ')+boxes.map((b,k)=>(nb>1?'กรอบ '+(k+1)+': ':'')+(res[k]||empty)).join(' | '));
+  }catch(err){log('ทดสอบไม่สำเร็จ: '+(err.message||err));if($('engine').value!=='ai')await dropWorker();}
+  setBusy(false);$('stop').disabled=true;
+};
+
+/* ---------- เพิ่มซับตรงเฟรมนี้ (ไม่ต้องสแกนใหม่ทั้งหมด) ---------- */
+$('addcue').onclick=async()=>{
+  const lang=$('lang').value,th=lang.includes('tha'),mode=$('mode').value,typing=$('typing').checked,engine=$('engine').value;
+  const conf=+$('conf').value||0,step=STEP_MS/1000,dur=v.duration,t0=v.currentTime,MAXSPAN=30;
+  if(engine==='ai'&&!$('apikey').value.trim()){needKey('โหมด AI ต้องใช้ API key — ใส่ตรงนี้ก่อน');return;}
+  stopFlag=false;setBusy(true);v.pause();
+  try{
+    log('กำลังอ่านเฟรมนี้…');
+    const worker=await getWorker(lang);
+    const {c,x,sx,sy,sw,sh}=setupCanvas();
+    const sc=document.createElement('canvas');sc.width=160;sc.height=40;
+    const sg=sc.getContext('2d',{willReadFrequently:true});
+    let lastSig=null,lastTx='';
+    const ocrAt=async t=>{
+      await seek(Math.min(Math.max(0,t),Math.max(0,dur-0.05)));
+      x.drawImage(v,sx,sy,sw,sh,0,0,c.width,c.height);
+      const sig=signature(c,sg);
+      if(sameSig(sig,lastSig)) return lastTx;
+      const tx=await readFrame(worker,c,x,mode,th,conf);lastSig=sig;lastTx=tx;return tx;
+    };
+    const local0=await ocrAt(t0);
+    let text=local0;
+    if(engine==='ai'){await seek(t0);text=cleanAI(await aiRead(frameJpeg(),lang));}   // AI อ่านข้อความ / OCR ในเครื่องใช้หาช่วงเวลา
+    if(!text){log('ไม่พบข้อความที่เฟรมนี้ — ลองปรับกรอบ/โหมด แล้วกด "ทดสอบเฟรมนี้" ก่อน'+(mode==='outline'?COLOR_HINT:''));}
+    else{
+      let start=t0,end=Math.min(dur,t0+step);
+      if(local0){
+        let miss=0;
+        for(let t=t0+step;t<dur&&t<=t0+MAXSPAN&&!stopFlag;t+=step){            // ไปข้างหน้า: ซับยังอยู่ไหม
+          const tx=await ocrAt(t);
+          if(tx&&same(local0,tx,typing)){end=Math.min(dur,t+step);miss=0;}else if(++miss>MAX_MISS) break;
+          log('หาช่วงเวลา… → '+fmt(t).slice(0,8));
+        }
+        miss=0;
+        for(let t=t0-step;t>=0&&t>=t0-MAXSPAN&&!stopFlag;t-=step){             // ย้อนหลัง: ซับเริ่มตั้งแต่เมื่อไหร่ (รวมช่วงที่ยังพิมพ์ไม่ครบ)
+          const tx=await ocrAt(t);
+          if(tx&&same(tx,local0,typing)){start=t;miss=0;}else if(++miss>MAX_MISS) break;
+          log('หาช่วงเวลา… ← '+fmt(t).slice(0,8));
+        }
+      }else end=Math.min(dur,t0+2);   // OCR ในเครื่องอ่านไม่ออก หาช่วงเวลาอัตโนมัติไม่ได้ → ตั้ง 2 วินาทีให้แก้เอง
+      const nq={start,end,text,sel:false};if(boxes.length>1) nq.bx=active+1;
+      const over=cues.find(q=>q.start<nq.end&&q.end>nq.start&&(q.bx||0)===(nq.bx||0));
+      cues.push(nq);cues.sort((a,b)=>a.start-b.start);lastAdded=nq;render();
+      log('เพิ่มแล้ว '+fmtEdit(start)+' → '+fmtEdit(end)+(local0?'':' (หาช่วงเวลาอัตโนมัติไม่ได้ ตั้งไว้ 2 วินาที ปรับในรายการได้)')
+        +(over?' · เวลาซ้อนกับข้อความ "'+over.text.slice(0,30)+'" ปรับเวลาได้ในรายการ':''));
+    }
+  }catch(err){log('เพิ่มซับไม่สำเร็จ: '+(err.message||err));if(engine!=='ai')await dropWorker();}
+  try{await seek(t0);}catch(e){}
+  setBusy(false);$('stop').disabled=true;
+};
+
+/* ---------- ถอดเสียงพูด (วิดีโอที่ไม่มีซับ) ---------- */
+$('src').onchange=()=>{
+  const au=$('src').value==='audio';
+  $('imgctl').style.display=au?'none':'block';$('audctl').style.display=au?'block':'none';
+  $('go').textContent=au?'เริ่มถอดเสียง':'เริ่มสแกน';
+  if(au)$('dbg').style.display='none';
+};
+$('aeng').onchange=()=>{const w=$('aeng').value==='whisper';$('wrow').style.display=w?'flex':'none';$('asrow').style.display=w?'none':'flex';};
+
+// อ่านเสียงจากไฟล์วิดีโอ → Float32Array โมโน 16kHz
+async function loadAudio(file){
+  const AC=window.AudioContext||window.webkitAudioContext;
+  if(!AC) throw new Error('เบราว์เซอร์นี้ไม่รองรับการอ่านเสียง');
+  const buf=await file.arrayBuffer();
+  let ac;try{ac=new AC({sampleRate:16000});}catch(e){ac=new AC();}
+  let ab;
+  try{ab=await ac.decodeAudioData(buf);}
+  catch(e){try{ac.close();}catch(_){}throw new Error('ถอดรหัสเสียงจากไฟล์นี้ไม่ได้ (ไม่มีแทร็กเสียง หรือ codec ไม่รองรับ)');}
+  const n=ab.length,ch=ab.numberOfChannels,sr=ab.sampleRate,mono=new Float32Array(n);
+  for(let c=0;c<ch;c++){const d=ab.getChannelData(c);for(let i=0;i<n;i++)mono[i]+=d[i]/ch;}
+  try{ac.close();}catch(_){}
+  if(sr===16000) return mono;
+  const off=new OfflineAudioContext(1,Math.ceil(n*16000/sr),16000),bs=off.createBufferSource(),tmp=off.createBuffer(1,n,sr);
+  tmp.copyToChannel(mono,0);bs.buffer=tmp;bs.connect(off.destination);bs.start();
+  return (await off.startRendering()).getChannelData(0);
+}
+function wavB64(f,sr){
+  const n=f.length,buf=new ArrayBuffer(44+n*2),dv=new DataView(buf);
+  const ws=(o,t)=>{for(let i=0;i<t.length;i++)dv.setUint8(o+i,t.charCodeAt(i));};
+  ws(0,'RIFF');dv.setUint32(4,36+n*2,true);ws(8,'WAVE');ws(12,'fmt ');dv.setUint32(16,16,true);dv.setUint16(20,1,true);
+  dv.setUint16(22,1,true);dv.setUint32(24,sr,true);dv.setUint32(28,sr*2,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);
+  ws(36,'data');dv.setUint32(40,n*2,true);
+  for(let i=0;i<n;i++){const x=Math.max(-1,Math.min(1,f[i]));dv.setInt16(44+i*2,x<0?x*0x8000:x*0x7FFF,true);}
+  const u8=new Uint8Array(buf);let bin='';
+  for(let i=0;i<u8.length;i+=0x8000) bin+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));
+  return btoa(bin);
+}
+const rms=a=>{let s=0,c=0;for(let i=0;i<a.length;i+=16){s+=a[i]*a[i];c++;}return Math.sqrt(s/Math.max(1,c));};
+// ตัดประโยคยาวเป็นหลายท่อนตามเครื่องหมายวรรคตอน แบ่งเวลาตามสัดส่วนความยาว
+function splitLong(sg){
+  const t=sg.text.trim(),mk=(a,b,x)=>({start:a,end:b,text:x,spk:sg.spk});
+  if(t.length<=84) return [mk(sg.start,sg.end,t)];
+  const parts=[];let cur='';
+  for(const pc of t.split(/(?<=[.!?…。！？,;])\s+/)){
+    if(cur&&(cur+' '+pc).length>84){parts.push(cur);cur=pc;}else cur=cur?cur+' '+pc:pc;
+  }
+  if(cur) parts.push(cur);
+  if(parts.length<2) return [mk(sg.start,sg.end,t)];
+  const tot=parts.reduce((a,x)=>a+x.length,0),dur=sg.end-sg.start;let st=sg.start;
+  return parts.map(x=>{const e=st+dur*x.length/tot,o=mk(st,e,x);st=e;return o;});
+}
+// รวมคำ (มีเวลารายคำ) เป็นกล่อง: ตัดเมื่อจบประโยค เว้นนานเกิน gap วินาที หรือยาวเกิน maxChars
+function groupWords(items,maxChars=84,gap=0.7){
+  const out=[];let cur=null;
+  const fin=()=>{if(cur){cur.text=cur.text.trim();if(cur.text)out.push(cur);}cur=null;};
+  for(const w of items){
+    if(cur){
+      const prev=cur.text.trim();
+      if(w.start-cur.end>gap||(prev+w.text).length>maxChars||/[.!?…。！？]["')”’]*$/.test(prev)) fin();
+    }
+    if(!cur) cur={start:w.start,end:w.end,text:w.text};
+    else{cur.text+=w.text;cur.end=w.end;}
+  }
+  fin();return out;
+}
+// Whisper ในเครื่อง (transformers.js) — โหลดจาก CDN ครั้งแรก
+let asr=null,asrName=null;
+async function getAsr(modelName){
+  if(asr&&asrName===modelName) return asr;
+  const T=await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
+  T.env.allowLocalModels=false;
+  asr=await T.pipeline('automatic-speech-recognition',modelName,{progress_callback:p=>{
+    if(p.status==='progress') log('โหลดโมเดล '+(p.file||'').split('/').pop()+' '+Math.round(p.progress||0)+'%');}});
+  asrName=modelName;return asr;
+}
+// Gemini ถอดเสียงเป็นส่วนๆ คืน [{start,end,text}] เวลานับจากต้นคลิป
+async function aiTranscribe(b64,alang,clipSec,spk){
+  const L={english:'English',japanese:'Japanese',thai:'Thai',korean:'Korean',chinese:'Chinese',auto:'the spoken language'}[alang]||'English';
+  const prompt='Transcribe the speech in this audio clip (language: '+L+') into subtitle segments.\n'
+    +'Return ONLY a JSON array of objects {"start": number, "end": number, "text": string'+(spk?', "speaker": string':'')+'}, where start and end are seconds from the beginning of THIS clip (decimals allowed). '
+    +'Each segment is one sentence or short phrase (at most about 10 seconds and 80 characters). '
+    +(spk?'Identify the speakers by their voices: "speaker" is a short label ("A", "B", "C"...) that stays the same for the same voice within this clip. Start a NEW segment whenever the speaker changes, even for a very short reply. ':'')
+    +'Transcribe exactly what is said in the original language: do not translate, summarize or censor (keep profanity as spoken). Skip music, noise and silence. If there is no speech, return [].';
+  const out=(await aiRaw(prompt,b64,8192,'audio/wav')).replace(/```[a-z]*/gi,'');
+  const a=out.indexOf('['),b=out.lastIndexOf(']');
+  if(a<0||b<a) return [];
+  let arr;try{arr=JSON.parse(out.slice(a,b+1));}catch(e){throw new Error('อ่านคำตอบของ AI ไม่ได้');}
+  const sec=x=>typeof x==='number'?x:parseT(String(x));
+  return arr.map(o=>({start:sec(o.start),end:sec(o.end),text:String((o&&o.text)||'').trim(),spk:spk&&o&&o.speaker!=null?String(o.speaker).trim():undefined}))
+    .filter(o=>o.text&&isFinite(o.start))
+    .map(o=>{const st=Math.max(0,Math.min(clipSec,o.start));return {start:st,end:Math.min(clipSec,Math.max(isFinite(o.end)?o.end:st+2,st+0.5)),text:o.text,spk:o.spk};})
+    .sort((x,y)=>x.start-y.start);
+}
+// เสียงที่ถอดรหัสแล้ว เก็บไว้ใช้ซ้ำ (ไฟล์ยาวเกิน 30 นาทีไม่เก็บ ประหยัดแรม)
+let audioCache=null;
+async function getAudio(){
+  if(audioCache&&audioCache.f===curFile) return audioCache.a;
+  const a=await loadAudio(curFile);
+  audioCache=a.length<=16000*1800?{f:curFile,a}:null;
+  return a;
+}
+function audioCfg(){
+  const eng=$('aeng').value;
+  if(eng==='gemini'){
+    if(!$('apikey').value.trim()){needKey('การถอดเสียงด้วย AI ต้องใช้ API key — ใส่ตรงนี้ก่อน');return null;}
+    if($('prov').value!=='gemini'){needKey('การถอดเสียงด้วย AI ใช้ได้เฉพาะ Gemini — เลือก Gemini ที่ "ผู้ให้บริการ" ก่อน');return null;}
+  }
+  return {eng,alang:$('alang').value,size:$('wsize').value,wsplit:$('wsplit').checked,aspk:$('aspk').checked};
+}
+// ถอดเสียงช่วง from..to (วินาที) → เติมลง out เป็น [{start,end,text,spk}] เวลาเป็นเวลาของวิดีโอ
+async function transcribeSegs(audio,from,to,cfg,prog,out){
+  const SR=16000,segs=out||[],span=Math.max(0.001,to-from);
+  if(cfg.eng==='gemini'){
+    const CLIP=240;                                   // ~7.7MB ต่อคลิป (WAV 16kHz) ไม่เกินขีดจำกัดของ API
+    for(let s=from;s<to&&!stopFlag;s+=CLIP){
+      const e=Math.min(to,s+CLIP);
+      const sl=audio.subarray(Math.floor(s*SR),Math.min(audio.length,Math.floor(e*SR)));
+      if(rms(sl)>=0.002){
+        log('ส่งเสียงช่วง '+fmtEdit(s)+' ให้ Gemini…');
+        const part=await aiTranscribe(wavB64(sl,SR),cfg.alang,sl.length/SR,cfg.aspk);
+        for(const o of part) segs.push({start:s+o.start,end:s+o.end,text:o.text,spk:o.spk});
+      }
+      prog(Math.min(1,(e-from)/span),segs.length,e);
+    }
+  }else{
+    const en=cfg.alang==='english',model='Xenova/whisper-'+cfg.size+(en?'.en':'');
+    log('กำลังโหลดโมเดล Whisper ('+cfg.size+')…');
+    const asrp=await getAsr(model);
+    const opts={chunk_length_s:30,stride_length_s:5,return_timestamps:true};
+    if(!en&&cfg.alang!=='auto'){opts.language=cfg.alang;opts.task='transcribe';}
+    const BLOCK=120,OVER=3;
+    let wordMode=cfg.wsplit;
+    for(let s=from;s<to&&!stopFlag;s+=BLOCK){
+      const last=s+BLOCK>=to,e=last?to:Math.min(to,s+BLOCK+OVER);
+      const sl=audio.slice(Math.floor(s*SR),Math.min(audio.length,Math.floor(e*SR)));
+      if(rms(sl)>=0.002){
+        let res;
+        try{res=await asrp(sl,{...opts,return_timestamps:wordMode?'word':true});}
+        catch(err){                                      // โมเดลไม่รองรับเวลารายคำ → ใช้เวลาระดับประโยคแทน
+          if(!wordMode) throw err;
+          wordMode=false;res=await asrp(sl,{...opts,return_timestamps:true});
+        }
+        const items=[];
+        for(const ch of (res.chunks||[])){
+          const ts=ch.timestamp||[0,null],a=ts[0]||0;
+          if(!last&&a>=BLOCK) continue;                // ส่วนที่ซ้อนกับบล็อกถัดไป ให้บล็อกถัดไปจัดการ
+          const b=(ts[1]==null||ts[1]<=a)?Math.min(a+(wordMode?0.3:2),sl.length/SR):ts[1];
+          items.push({start:a,end:b,text:ch.text||''});
+        }
+        const groups=wordMode?groupWords(items):items.map(x=>({start:x.start,end:x.end,text:x.text.trim()}));
+        for(const g of groups){
+          if(!/[\p{L}\p{N}]/u.test(g.text)) continue;
+          const n=segs.length;                         // กัน Whisper วนซ้ำประโยคเดิมเมื่อเจอช่วงเงียบ/เพลง
+          if(n>=2&&norm(segs[n-1].text)===norm(g.text)&&norm(segs[n-2].text)===norm(g.text)) continue;
+          segs.push({start:s+g.start,end:s+g.end,text:g.text});
+        }
+      }
+      prog(Math.min(1,(s+BLOCK-from)/span),segs.length,Math.min(to,s+BLOCK));
+    }
+  }
+  return segs;
+}
+function buildAudioCues(segs,dur){
+  return segs.flatMap(splitLong).map(q=>({start:q.start,end:Math.min(q.end,dur),text:q.text,sel:false,...(q.spk?{spk:q.spk}:{})}))
+    .filter(q=>q.end>q.start).sort((a,b)=>a.start-b.start);
+}
+async function goAudio(){
+  if(!curFile){log('ยังไม่ได้เลือกไฟล์วิดีโอ');return;}
+  const cfg=audioCfg();if(!cfg) return;
+  stopFlag=false;cues=[];trash.length=0;setBusy(true);v.pause();$('out').style.display='none';$('dbg').style.display='none';
+  const p=$('p');p.style.display='block';p.value=0;
+  const segs=[];
+  try{
+    log('กำลังอ่านเสียงจากไฟล์…');
+    const audio=await getAudio(),total=audio.length/16000;
+    await transcribeSegs(audio,0,total,cfg,(f,n,at)=>{p.value=f;log('ถอดเสียงแล้ว '+fmtEdit(at)+' / '+fmtEdit(total)+' · '+n+' ข้อความ');},segs);
+  }catch(err){
+    log('ถอดเสียงไม่สำเร็จ: '+(err.message||err)+(segs.length?' (เก็บผลที่ได้แล้ว '+segs.length+' ข้อความ)':''));
+    if(cfg.eng!=='gemini'){asr=null;asrName=null;}
+  }
+  cues=buildAudioCues(segs,v.duration||Infinity);
+  p.style.display='none';setBusy(false);$('stop').disabled=true;
+  if(cues.length) log((stopFlag?'หยุดแล้ว · ':'เสร็จแล้ว · ')+'ได้ '+cues.length+' ข้อความ — เวลาจากการถอดเสียงอาจคลาดเคลื่อนเล็กน้อย ตรวจ/แก้ได้ในรายการ');
+  render();
+}
+
+/* ---------- ถอดเสียงเฉพาะช่วงแล้วแทรกเข้าผลลัพธ์ (ไม่ต้องถอดใหม่ทั้งเรื่อง) ---------- */
+function askChoice(title,msg,choices){
+  return new Promise(res=>{
+    let done=false;const fin=x=>{if(!done){done=true;res(x);}};
+    modal((card,close)=>{
+      const h=document.createElement('strong');h.textContent=title;
+      const pp=document.createElement('div');pp.className='hint';pp.textContent=msg;
+      const row=document.createElement('div');row.className='row';
+      const no=document.createElement('button');no.className='g';no.textContent='ยกเลิก';no.onclick=()=>close();row.append(no);
+      choices.forEach(c=>{const b=document.createElement('button');b.className=c.danger?'danger':'g';b.textContent=c.label;b.onclick=()=>{fin(c.key);close();};row.append(b);});
+      card.append(h,pp,row);no.focus();
+    },()=>fin(null));
+  });
+}
+$('afromnow').onclick=()=>{$('afrom').value=fmtEdit(v.currentTime);};
+$('atonow').onclick=()=>{$('ato').value=fmtEdit(v.currentTime);};
+$('addaud').onclick=async()=>{
+  if(!curFile){toast('ยังไม่ได้เลือกไฟล์วิดีโอ');return;}
+  const dur=v.duration||Infinity;
+  let a=parseT($('afrom').value),b=parseT($('ato').value);
+  if(isNaN(a)) a=v.currentTime;                       // ช่องว่าง → เริ่มที่ตำแหน่งปัจจุบันของวิดีโอ
+  a=Math.max(0,a);if(isNaN(b)||b<=a) b=a+10;          // ช่องว่าง/ผิด → 10 วินาที
+  b=Math.min(b,dur);
+  if(b-a<0.5){toast('ช่วงสั้นเกินไป — ตั้งเวลา "จาก/ถึง" ใหม่');return;}
+  const cfg=audioCfg();if(!cfg) return;
+  const ov=cues.filter(q=>q.end>a&&q.start<b);
+  let mode='keep';
+  if(ov.length){
+    mode=await askChoice('มีข้อความเดิมในช่วงนี้ ('+ov.length+' กล่อง)','ช่วง '+fmtEdit(a)+' → '+fmtEdit(b)+' จะให้ทำอย่างไรกับข้อความเดิม? (ที่แทนที่จะอยู่ในถังขยะ กู้คืนได้)',
+      [{key:'keep',label:'เก็บของเดิม แล้วเพิ่ม'},{key:'replace',label:'แทนที่ที่ซ้อนกัน',danger:true}]);
+    if(!mode) return;
+  }
+  stopFlag=false;setBusy(true);v.pause();
+  const p=$('p');p.style.display='block';p.value=0;
+  const segs=[],t0=v.currentTime;
+  let failed=false;
+  try{
+    log('กำลังอ่านเสียงจากไฟล์…');
+    const audio=await getAudio();
+    await transcribeSegs(audio,a,Math.min(b,audio.length/16000),cfg,(f,n,at)=>{p.value=f;log('ถอดเสียงช่วงที่เลือกแล้ว '+fmtEdit(at)+' / '+fmtEdit(b)+' · '+n+' ข้อความ');},segs);
+  }catch(err){
+    failed=true;log('ถอดเสียงไม่สำเร็จ: '+(err.message||err));
+    if(cfg.eng!=='gemini'){asr=null;asrName=null;}
+  }
+  p.style.display='none';
+  const added=buildAudioCues(segs,dur).filter(q=>q.start>=a-0.05&&q.start<b);
+  if(added.length){
+    const removed=mode==='replace'?ov.slice():[];
+    removed.forEach(q=>{const k=cues.indexOf(q);if(k>=0) cues.splice(k,1);if(q.text.trim()) trash.unshift({q});});
+    if(trash.length>50) trash.length=50;
+    cues.push(...added);cues.sort((x,y)=>x.start-y.start||(x.bx||0)-(y.bx||0));lastAdded=added[0];
+    const txt0=added.map(q=>q.text);
+    pushUndo('ถอดเสียงช่วงนี้',async()=>{
+      if(added.some((q,i)=>q.text!==txt0[i])){
+        const ok=await askConfirm('ย้อนกลับการเพิ่มจากเสียง?',noteNode('คุณแก้ข้อความที่เพิ่มเข้ามาแล้ว การย้อนกลับจะทำให้ส่วนที่แก้หายไป'),'ย้อนกลับ');
+        if(!ok) return false;
+      }
+      added.forEach(q=>{const k=cues.indexOf(q);if(k>=0) cues.splice(k,1);});
+      removed.forEach(q=>{const i=trash.findIndex(t=>t.q===q);if(i>=0) trash.splice(i,1);if(cues.indexOf(q)<0) cues.push(q);});
+      cues.sort((x,y)=>x.start-y.start||(x.bx||0)-(y.bx||0));
+      toast('ย้อนกลับแล้ว');return true;
+    });
+    render();
+    toast('เพิ่ม '+added.length+' ข้อความจากเสียงช่วง '+fmtEdit(a)+' → '+fmtEdit(b)+(removed.length?' (ย้ายของเดิม '+removed.length+' กล่องไปถังขยะ)':''));
+  }else if(!failed){
+    toast(stopFlag?'หยุดแล้ว':'ไม่พบเสียงพูดในช่วงนี้ — ลองขยายช่วงหรือเปลี่ยนวิธีถอดเสียง');
+  }
+  try{v.currentTime=t0;}catch(e){}
+  setBusy(false);$('stop').disabled=true;
+};
+
+/* ---------- สแกนทั้งวิดีโอ ---------- */
+$('go').onclick=async()=>{
+  if($('src').value==='audio'){await goAudio();return;}
+  if($('engine').value==='ai'&&!$('apikey').value.trim()){needKey('โหมด "OCR + AI ตรวจแก้" ต้องใช้ API key — ใส่ตรงนี้ก่อน');return;}
+  stopFlag=false;cues=[];trash.length=0;setBusy(true);v.pause();$('out').style.display='none';
+  const lang=$('lang').value,step=STEP_MS/1000,dur=v.duration,th=lang.includes('tha');
+  const engine=$('engine').value,mode=$('mode').value,typing=$('typing').checked;
+  const conf=engine==='ai'?Math.min(+$('conf').value||0,30):(+$('conf').value||0);   // โหมด AI: จับหยาบๆ ก่อน แล้วให้ AI คัดทีหลัง
+  const p=$('p');p.style.display='block';p.value=0;
+  log('กำลังโหลดตัว OCR…');
+  let worker;
+  try{worker=await getWorker(lang);}
+  catch(err){log('โหลด OCR ไม่สำเร็จ: '+(err.message||err)+' (ตรวจสอบอินเทอร์เน็ต)');setBusy(false);$('stop').disabled=true;p.style.display='none';return;}
+  const nb=boxes.length,samples=boxes.map(()=>[]);
+  try{
+    const rig=boxes.map(b=>{
+      const o=setupCanvas(b),sc=document.createElement('canvas');sc.width=160;sc.height=40;
+      o.sg=sc.getContext('2d',{willReadFrequently:true});o.lastSig=null;o.lastTxt='';return o;
+    });
+    let skipped=0;
+    for(let i=0,t=0;t<dur&&!stopFlag;i++,t=i*step){
+      await seek(Math.min(t,Math.max(0,dur-0.05)));
+      const got=[];
+      for(let k=0;k<nb;k++){
+        const o=rig[k];
+        o.x.drawImage(v,o.sx,o.sy,o.sw,o.sh,0,0,o.c.width,o.c.height);
+        const sig=signature(o.c,o.sg);
+        let txt;
+        if(sameSig(sig,o.lastSig)){txt=o.lastTxt;skipped++;}
+        else{txt=await readFrame(worker,o.c,o.x,mode,th,conf);o.lastSig=sig;o.lastTxt=txt;}
+        samples[k].push({t,txt});
+        if(txt) got.push((nb>1?(k+1)+': ':'')+txt);
+      }
+      p.value=t/dur;
+      log(`สแกน ${fmt(t).slice(0,8)} / ${fmt(dur).slice(0,8)}${got.length?'  · '+got.join(' | ').slice(0,60):''}${skipped?`  (ข้ามเฟรมซ้ำ ${skipped})`:''}`);
+    }
+  }catch(err){
+    log('เกิดข้อผิดพลาดระหว่างสแกน: '+(err.message||err));
+    await dropWorker();
+  }
+  // รวมเฟรมที่ข้อความต่อเนื่องกัน แยกตามกรอบ แล้วนำทุกกรอบมารวมกัน
+  // (ซับที่ขึ้นพร้อมกันในคนละกรอบ = คนละกล่อง เวลาซ้อนกันได้)
+  const all=[];
+  samples.forEach((smp,k)=>{
+    const list=[];let prev=null;
+    for(const s of smp){
+      const end=s.t+step;
+      if(!s.txt){
+        if(prev){prev.misses=(prev.misses||0)+1;if(prev.misses>MAX_MISS)prev=null;}
+        continue;
+      }
+      if(prev&&same(prev.text,s.txt,typing)){
+        prev.end=end;prev.misses=0;
+        if(norm(s.txt).length>=norm(prev.text).length)prev.text=s.txt;
+      }else{
+        prev={start:s.t,end,text:s.txt,misses:0};list.push(prev);
+      }
+    }
+    const merged=[];                                  // รวม cue ที่ติดกันอีกรอบ แล้วตัด cue ที่สั้นเกินไป (มักเป็นขยะ)
+    for(const q of list){
+      const l=merged[merged.length-1];
+      if(l&&q.start-l.end<=GAP_MS/1000&&same(l.text,q.text,typing)){
+        l.end=Math.max(l.end,q.end);
+        if(norm(q.text).length>=norm(l.text).length)l.text=q.text;
+      }else merged.push(q);
+    }
+    merged.filter(q=>Math.min(q.end,dur)-q.start>=MIN_CUE_MS/1000-1e-6).forEach(q=>{
+      q.end=Math.min(q.end,dur);delete q.misses;if(nb>1)q.bx=k+1;all.push(q);
+    });
+  });
+  cues=all.sort((a,b)=>a.start-b.start||(a.bx||0)-(b.bx||0));
+  if(engine==='ai'&&cues.length&&!stopFlag){log('พบ '+cues.length+' ข้อความ · กำลังส่งให้ AI ตรวจ…');await aiRefine(cues,lang,step,p);}
+  p.style.display='none';setBusy(false);$('stop').disabled=true;
+  log((stopFlag?`หยุดแล้ว พบ ${cues.length} ข้อความ`:`เสร็จแล้ว พบ ${cues.length} ข้อความ`)+(!cues.length&&mode==='outline'?COLOR_HINT:''));
+  render();
+};
+$('stop').onclick=()=>{stopFlag=true};
+// โหมดมีขอบล้างภาพมาแล้ว จึงลดเกณฑ์ความมั่นใจต่อคำลงได้ (โหมดอื่นใช้ 60) — ปรับเองต่อได้
+$('mode').onchange=()=>{$('conf').value=($('mode').value==='outline'||$('mode').value==='adapt')?45:60;};
+
+/* ---------- ผลลัพธ์ ---------- */
+let trBusy=false,trCancel=false,lastAdded=null;
+const trash=[],undoStack=[];   // ข้อความที่ลบแล้ว (กู้คืนได้) เก็บล่าสุดไว้ 50 รายการ
+// เวลาแบบแก้ไขได้: m:ss.mmm (หรือ h:mm:ss.mmm ถ้าเกิน 1 ชม.) / รับอินพุต mm:ss, h:mm:ss, มี . หรือ , ก็ได้
+function fmtEdit(t){const ms=Math.round(t*1000),h=Math.floor(ms/3600000),m=Math.floor(ms/60000)%60,sec=Math.floor(ms/1000)%60,r=ms%1000;
+  const p=(n,l=2)=>String(n).padStart(l,'0');return (h?h+':'+p(m):m)+':'+p(sec)+'.'+p(r,3);}
+function parseT(str){
+  str=(str||'').trim().replace(',','.');if(!str) return NaN;
+  const parts=str.split(':');if(parts.length>3||parts.some(x=>x===''||isNaN(+x))) return NaN;
+  return parts.reduce((a,x)=>a*60+(+x),0);
+}
+function timeInput(q,key){
+  const i=document.createElement('input');i.type='text';i.className='ti';i.value=fmtEdit(q[key]);i.setAttribute('aria-label',key==='start'?'เวลาเริ่ม':'เวลาจบ');
+  i.onchange=()=>{
+    const t=parseT(i.value),st=key==='start'?t:q.start,en=key==='end'?t:q.end;
+    if(isNaN(t)||t<0||en<=st){i.value=fmtEdit(q[key]);return;}
+    q[key]=t;cues.sort((a,b)=>a.start-b.start);render();
+  };
+  return i;
+}
+/* ---------- แจ้งสั้นๆ / ย้อนกลับ ---------- */
+let toastT=null;
+function toast(msg){
+  let t=$('toast');if(!t){t=document.createElement('div');t.id='toast';document.body.append(t);}
+  t.textContent=msg;t.className='toast show';clearTimeout(toastT);toastT=setTimeout(()=>{t.className='toast';},3500);
+}
+// ย้อนกลับการกระทำล่าสุด (รวม/แยก/นำเข้า) fn คืน false = ผู้ใช้ยกเลิก ยังย้อนต่อได้
+function pushUndo(label,fn){undoStack.push({label,fn});if(undoStack.length>30) undoStack.shift();}
+async function doUndo(){
+  const u=undoStack[undoStack.length-1];if(!u) return;
+  const ok=await u.fn();
+  if(ok!==false){undoStack.pop();render();}
+}
+const restoreQ=(q,b)=>{q.text=b.text;q.end=b.end;if(b.hasTr) q.tr=b.tr;else delete q.tr;};
+const noteNode=t=>{const d=document.createElement('div');d.className='mtext';d.textContent=t;return d;};
+
+/* ---------- นำเข้าไฟล์ซับ ---------- */
+async function readTextFile(f){
+  const buf=await f.arrayBuffer(),u=new Uint8Array(buf);
+  if(u[0]===0xFF&&u[1]===0xFE) return new TextDecoder('utf-16le').decode(buf);
+  if(u[0]===0xFE&&u[1]===0xFF) return new TextDecoder('utf-16be').decode(buf);
+  try{return new TextDecoder('utf-8',{fatal:true}).decode(buf);}
+  catch(e){try{return new TextDecoder('windows-874').decode(buf);}catch(_){return new TextDecoder('utf-8').decode(buf);}}   // ไฟล์ไทยเก่า (TIS-620)
+}
+function parseSub(txt){
+  txt=txt.replace(/^\uFEFF/,'').replace(/\r\n?/g,'\n');
+  const out=[];
+  if(/^\[[\d:.,]+\s*-->/m.test(txt)){                       // รูปแบบ .txt ที่ส่งออกจากเครื่องมือนี้ [เวลา --> เวลา] ข้อความ (+ บรรทัด → คำแปล)
+    let last=null;
+    for(const ln of txt.split('\n')){
+      const m=ln.match(/^\[([\d:.,]+)\s*-->\s*([\d:.,]+)\]\s?(.*)$/);
+      if(m){const st=parseT(m[1]),en=parseT(m[2]);last=null;
+        if(isFinite(st)&&isFinite(en)&&m[3].trim()){last={start:st,end:en>st?en:st+1,text:m[3].trim(),sel:false};out.push(last);}}
+      else{const t=ln.match(/^\s+→\s?(.*)$/);if(t&&last) last.tr=t[1].trim();}
+    }
+    return out.sort((a,b)=>a.start-b.start);
+  }
+  for(const blk of txt.split(/\n{2,}/)){                      // .srt / .vtt
+    const lines=blk.split('\n'),k=lines.findIndex(l=>l.includes('-->'));
+    if(k<0) continue;
+    const m=lines[k].match(/([\d:.,]+)\s*-->\s*([\d:.,]+)/);
+    if(!m) continue;
+    const st=parseT(m[1]),en=parseT(m[2]),text=lines.slice(k+1).join('\n').trim();
+    if(!isFinite(st)||!isFinite(en)||!text) continue;
+    out.push({start:st,end:en>st?en:st+1,text,sel:false});
+  }
+  return out.sort((a,b)=>a.start-b.start);
+}
+function askImport(n,fname){
+  return new Promise(res=>{
+    let done=false;const fin=x=>{if(!done){done=true;res(x);}};
+    modal((card,close)=>{
+      const h=document.createElement('strong');h.textContent='นำเข้า '+n+' ข้อความจาก '+fname;
+      const p=document.createElement('div');p.className='hint';p.textContent='ตอนนี้มีผลลัพธ์อยู่ '+cues.length+' ข้อความ จะให้ทำอย่างไร? (ย้อนกลับได้ด้วยปุ่ม ↩ หลังนำเข้า)';
+      const row=document.createElement('div');row.className='row';
+      const no=document.createElement('button');no.className='g';no.textContent='ยกเลิก';no.onclick=()=>close();
+      const ap=document.createElement('button');ap.className='g';ap.textContent='เพิ่มต่อท้าย';ap.onclick=()=>{fin('append');close();};
+      const rp=document.createElement('button');rp.className='danger';rp.textContent='แทนที่ทั้งหมด';rp.onclick=()=>{fin('replace');close();};
+      row.append(no,ap,rp);card.append(h,p,row);no.focus();
+    },()=>fin(null));
+  });
+}
+$('srtfile').onchange=async e=>{
+  const f=e.target.files[0];e.target.value='';              // เคลียร์ช่องเลือกไฟล์ จะได้เลือกไฟล์เดิมซ้ำได้
+  if(!f) return;
+  try{
+    const list=parseSub(await readTextFile(f));
+    if(!list.length){toast('ไม่พบข้อความในไฟล์นี้ (ต้องเป็น .srt / .vtt หรือ .txt ที่ส่งออกจากเครื่องมือนี้)');return;}
+    let mode='replace';
+    if(cues.length){mode=await askImport(list.length,f.name);if(!mode) return;}
+    const old=cues.slice();
+    if(mode==='replace') cues=list;else cues=cues.concat(list);
+    cues.sort((a,b)=>a.start-b.start||(a.bx||0)-(b.bx||0));
+    if(!curFile) name=f.name.replace(/\.[^.]+$/,'');
+    pushUndo('นำเข้าไฟล์',async()=>{
+      const ok=await askConfirm('ย้อนกลับการนำเข้า?',noteNode('ผลลัพธ์จะกลับเป็นก่อนนำเข้า การแก้ไขหลังนำเข้าจะหายไป'),'ย้อนกลับ');
+      if(!ok) return false;
+      cues=old;toast('ย้อนกลับการนำเข้าแล้ว');return true;
+    });
+    render();$('out').scrollIntoView({behavior:'smooth',block:'start'});
+    toast('นำเข้า '+list.length+' ข้อความจาก '+f.name+(curFile?'':' · เลือกวิดีโอเพื่อฟัง/ตรวจเวลาคู่กัน'));
+  }catch(err){toast('นำเข้าไม่สำเร็จ: '+(err.message||err));}
+};
+
+/* ---------- ยืนยันการลบ + ถังขยะ ---------- */
+function modal(build,onClose){
+  const bk=document.createElement('div');bk.className='modal';
+  const card=document.createElement('div');card.className='mcard';
+  bk.append(card);document.body.append(bk);
+  const close=()=>{if(bk.parentNode){bk.remove();if(onClose)onClose();}};
+  bk.onclick=e=>{if(e.target===bk) close();};
+  build(card,close);return close;
+}
+function cueNode(q){
+  const w=document.createElement('div');
+  const m=document.createElement('div');m.className='mmeta';
+  m.textContent=fmtEdit(q.start)+' → '+fmtEdit(q.end)+(q.spk?' · '+q.spk:'')+(q.bx?' · กรอบ '+q.bx:'');
+  const t=document.createElement('div');t.className='mtext';
+  t.textContent=q.text+(q.tr?'\n→ '+q.tr:'');
+  w.append(m,t);return w;
+}
+function askConfirm(title,node,okLabel){
+  return new Promise(res=>{
+    let done=false;const fin=x=>{if(!done){done=true;res(x);}};
+    modal((card,close)=>{
+      const h=document.createElement('strong');h.textContent=title;
+      const no=document.createElement('button');no.className='g';no.textContent='ยกเลิก';
+      const ok=document.createElement('button');ok.className='danger';ok.textContent=okLabel;
+      const row=document.createElement('div');row.className='row';row.append(no,ok);
+      card.append(h,node,row);
+      ok.onclick=()=>{fin(true);close();};no.onclick=()=>close();
+      no.focus();
+    },()=>fin(false));
+  });
+}
+async function deleteCue(q){
+  if(q.text.trim()||q.tr){                                   // กล่องว่าง (เพิ่งแทรก) ลบได้เลย ไม่ต้องถาม
+    const ok=await askConfirm('ลบข้อความนี้?',cueNode(q),'ลบ');
+    if(!ok) return;
+  }
+  const k=cues.indexOf(q);if(k<0) return;
+  cues.splice(k,1);
+  if(q.text.trim()||q.tr){trash.unshift({q});if(trash.length>50) trash.length=50;}
+  render();
+}
+function restoreTrash(i){
+  const it=trash.splice(i,1)[0];if(!it) return;
+  cues.push(it.q);cues.sort((a,b)=>a.start-b.start||(a.bx||0)-(b.bx||0));lastAdded=it.q;render();
+}
+function openTrash(){
+  modal((card,close)=>{
+    const h=document.createElement('strong');h.textContent='ถังขยะ ('+trash.length+')';card.append(h);
+    if(!trash.length){const e=document.createElement('div');e.className='hint';e.textContent='ไม่มีข้อความที่ลบ';card.append(e);}
+    trash.forEach((it,i)=>{
+      const row=document.createElement('div');row.className='titem';
+      const b=document.createElement('button');b.className='g mini';b.textContent='↩ กู้คืน';
+      b.onclick=()=>{restoreTrash(i);close();};
+      row.append(cueNode(it.q),b);card.append(row);
+    });
+    const f=document.createElement('div');f.className='row';
+    const all=document.createElement('button');all.textContent='กู้คืนทั้งหมด';all.disabled=!trash.length;
+    all.onclick=()=>{trash.splice(0).forEach(it=>cues.push(it.q));cues.sort((a,b)=>a.start-b.start||(a.bx||0)-(b.bx||0));render();close();};
+    const clr=document.createElement('button');clr.className='g';clr.textContent='ล้างถังขยะ';clr.disabled=!trash.length;
+    let armed=false;
+    clr.onclick=()=>{if(!armed){armed=true;clr.textContent='แน่ใจไหม? กดอีกครั้ง';clr.classList.add('danger');return;}trash.length=0;render();close();};
+    const cl=document.createElement('button');cl.className='g';cl.textContent='ปิด';cl.onclick=close;
+    f.append(all,clr,cl);card.append(f);
+  });
+}
+$('trashbtn').onclick=openTrash;$('undobtn').onclick=doUndo;
+
+// ฟังเสียงตรงช่วงเวลาของกล่องนั้น (เล่นในวิดีโอ ไม่เลื่อนหน้าจอ) เผื่อหัวท้าย AUD_PAD วินาทีเพราะเวลาที่ถอดเสียงอาจคลาดเคลื่อนเล็กน้อย
+const AUD_PAD=0.25;
+let playingCue=null,playTimer=null,playBtn=null;
+function stopCuePlay(keep){
+  clearInterval(playTimer);playTimer=null;
+  const was=playingCue;playingCue=null;
+  if(playBtn){playBtn.textContent='🔊 ฟัง';playBtn=null;}
+  if(was&&!keep) v.pause();
+}
+v.addEventListener('pause',()=>{if(playingCue) stopCuePlay();});    // ผู้ใช้กดหยุดเองจากแถบควบคุม
+function playCue(q,btn){
+  if(playingCue===q){stopCuePlay();return;}
+  stopCuePlay(true);
+  v.muted=false;syncMute();
+  const st=Math.max(0,q.start-AUD_PAD),en=Math.min(v.duration||Infinity,q.end+AUD_PAD);
+  playingCue=q;playBtn=btn;btn.textContent='⏹ หยุด';
+  v.currentTime=st;
+  const pr=v.play();if(pr&&pr.catch) pr.catch(()=>stopCuePlay());
+  playTimer=setInterval(()=>{if(v.currentTime>=en||v.ended) stopCuePlay();},40);
+}
+// แยกกล่องที่ตำแหน่งเคอร์เซอร์ในช่องข้อความ (ไม่ได้วางเคอร์เซอร์ → แยกตรงกลางที่ขอบประโยค/คำ) เวลาแบ่งตามสัดส่วนความยาว
+function midSplit(t){
+  const mid=t.length/2;let best=-1,bd=1e9;
+  for(const m of t.matchAll(/[.!?…。！？]+\s+/g)){const p=m.index+m[0].length,d=Math.abs(p-mid);if(p<t.length&&d<bd){bd=d;best=p;}}
+  if(best<0) for(const m of t.matchAll(/\s+/g)){const p=m.index+m[0].length,d=Math.abs(p-mid);if(p<t.length&&d<bd){bd=d;best=p;}}
+  return best>0?best:Math.floor(mid);
+}
+function splitCue(q,ta,keepTime){
+  const t=q.text;let pos=ta?ta.selectionStart:0;
+  if(!(pos>0&&pos<t.length)) pos=midSplit(t);
+  const a=t.slice(0,pos).trim(),b=t.slice(pos).trim();
+  if(!a||!b) return;
+  const before={text:q.text,end:q.end,tr:q.tr,hasTr:'tr' in q};
+  // keepTime: สองกล่องใช้ช่วงเวลาเดียวกัน (ซับสองคนที่ขึ้นพร้อมกัน) / ไม่งั้นแบ่งเวลาตามสัดส่วนความยาว
+  const cut=keepTime?q.end:q.start+(q.end-q.start)*a.length/(a.length+b.length);
+  const nq={start:keepTime?q.start:cut,end:q.end,text:b,sel:q.sel};if(q.spk!==undefined) nq.spk=q.spk;if(q.bx!==undefined) nq.bx=q.bx;
+  q.end=cut;q.text=a;delete q.tr;
+  cues.splice(cues.indexOf(q)+1,0,nq);lastAdded=nq;
+  pushUndo('แยกกล่อง',async()=>{
+    const k=cues.indexOf(q),k2=cues.indexOf(nq);
+    if(k<0||k2<0){toast('ย้อนกลับไม่ได้: กล่องที่แยกถูกลบไปแล้ว');return true;}
+    if(q.text!==a||nq.text!==b){
+      const ok=await askConfirm('ย้อนกลับการแยก?',noteNode('คุณแก้ข้อความหลังแยกไว้ การย้อนกลับจะทำให้ส่วนที่แก้หายไป'),'ย้อนกลับ');
+      if(!ok) return false;
+    }
+    restoreQ(q,before);cues.splice(cues.indexOf(nq),1);lastAdded=q;toast('ย้อนกลับการแยกแล้ว');return true;
+  });
+  render();
+}
+function insertAfter(q){
+  const i=cues.indexOf(q),nx=cues[i+1],st=q.end;
+  let en=st+2;if(nx&&nx.start>st) en=Math.min(en,nx.start);
+  if(v.duration) en=Math.min(en,v.duration);
+  const nq={start:st,end:en>st?en:st+1,text:'',sel:false};
+  cues.splice(i+1,0,nq);lastAdded=nq;render();
+}
+function mergeNext(q){
+  const i=cues.indexOf(q),n=cues[i+1];if(!n) return;
+  const before={text:q.text,end:q.end,tr:q.tr,hasTr:'tr' in q};
+  const merged=(q.text.trim()+' '+n.text.trim()).trim();
+  q.text=merged;q.end=Math.max(q.end,n.end);delete q.tr;
+  cues.splice(i+1,1);
+  pushUndo('รวมกล่อง',async()=>{
+    const k=cues.indexOf(q);
+    if(k<0){toast('ย้อนกลับไม่ได้: กล่องที่รวมถูกลบไปแล้ว');return true;}
+    if(q.text!==merged){
+      const ok=await askConfirm('ย้อนกลับการรวม?',noteNode('คุณแก้ข้อความหลังรวมไว้ การย้อนกลับจะทำให้ส่วนที่แก้หายไป'),'ย้อนกลับ');
+      if(!ok) return false;
+    }
+    restoreQ(q,before);cues.splice(k+1,0,n);lastAdded=n;toast('ย้อนกลับการรวมแล้ว');return true;
+  });
+  render();
+}
+function miniBtn(label,title,fn){const b=document.createElement('button');b.className='g mini';b.textContent=label;b.title=title;b.onclick=fn;return b;}
+function updateTrUi(){
+  const n=cues.filter(q=>q.sel).length;
+  if(!trBusy) $('trbtn').textContent='แปลข้อความที่เลือก ('+n+')';
+  $('selall').checked=cues.length>0&&n===cues.length;
+  const has=cues.some(q=>q.tr);
+  $('dltr').style.display=$('dlbi').style.display=has?'inline-block':'none';
+}
+function render(){
+  const box=$('cues');
+  box.innerHTML='';
+  $('out').style.display='block';
+  $('trpanel').style.display=cues.length?'block':'none';
+  $('trashbar').style.display=(trash.length||undoStack.length)?'flex':'none';
+  $('trashbtn').style.display=$('trhint').style.display=trash.length?'':'none';$('trashbtn').textContent='🗑 ถังขยะ ('+trash.length+')';
+  const u=undoStack[undoStack.length-1];$('undobtn').style.display=u?'':'none';if(u) $('undobtn').textContent='↩ ย้อนกลับ: '+u.label;
+  updateTrUi();
+  if(!cues.length){box.textContent='ไม่พบข้อความ ลองลากกรอบให้ตรงบรรทัดซับ กด "ทดสอบเฟรมนี้" ดูภาพที่ OCR เห็น เปลี่ยนโหมด "ปรับภาพก่อนอ่าน" หรือลดความมั่นใจต่อคำ';return;}
+  cues.forEach(q=>{
+    const d=document.createElement('div');d.className='cue'+(q===lastAdded?' hl':'');
+    const t=document.createElement('div');t.className='t';
+    {
+      const cb=document.createElement('input');cb.type='checkbox';cb.className='sel';cb.checked=!!q.sel;
+      cb.onchange=()=>{q.sel=cb.checked;updateTrUi();};
+      t.append(cb);
+    }
+    const nowBtn=key=>miniBtn('⏱','ตั้งเป็นเวลาปัจจุบันของวิดีโอ',()=>{
+      const tv=v.currentTime,st=key==='start'?tv:q.start,en=key==='end'?tv:q.end;
+      if(en<=st) return;q[key]=tv;cues.sort((a,b)=>a.start-b.start);render();});
+    t.append(
+      miniBtn('▶','ไปที่เวลานี้ในวิดีโอ',()=>{v.pause();v.currentTime=q.start;$('vbox').scrollIntoView({behavior:'smooth',block:'center'});}),
+      timeInput(q,'start'),nowBtn('start'),document.createTextNode('→'),timeInput(q,'end'),nowBtn('end'));
+    const body=document.createElement('div');body.className='body';
+    const ta=document.createElement('textarea');ta.value=q.text;ta.oninput=()=>q.text=ta.value;
+    body.append(ta);
+    if(q.tr!==undefined){
+      const tr=document.createElement('textarea');tr.value=q.tr;tr.oninput=()=>{q.tr=tr.value;};
+      body.append(tr);
+    }
+    const tools=document.createElement('div');tools.className='tools';
+    if(q.bx){const tg=document.createElement('span');tg.className='bxtag';tg.textContent='กรอบ '+q.bx;tools.append(tg);}
+    if(q.spk!==undefined){
+      const si=document.createElement('input');si.className='spk';si.placeholder='ผู้พูด';si.value=q.spk;si.oninput=()=>{q.spk=si.value;};tools.append(si);
+    }
+    const lb=miniBtn(playingCue===q?'⏹ หยุด':'🔊 ฟัง','ฟังเสียงช่วงเวลานี้จากวิดีโอ (ไม่เลื่อนหน้าจอ)',()=>playCue(q,lb));
+    if(playingCue===q) playBtn=lb;
+    tools.append(
+      lb,
+      miniBtn('✂ แยก','แยกกล่องนี้ที่ตำแหน่งเคอร์เซอร์ในข้อความ แบ่งเวลาตามความยาว (ถ้าไม่ได้วางเคอร์เซอร์ จะแยกตรงกลาง)',()=>splitCue(q,ta)),
+      miniBtn('⧉ แยกคงเวลา','แยกที่เคอร์เซอร์เป็นสองกล่องที่ใช้ช่วงเวลาเดียวกัน สำหรับซับสองคนที่ขึ้นพร้อมกัน',()=>splitCue(q,ta,true)),
+      miniBtn('＋ แทรกถัดไป','แทรกกล่องว่างต่อจากกล่องนี้',()=>insertAfter(q)),
+      miniBtn('⤵ รวมกับถัดไป','รวมกล่องนี้กับกล่องถัดไป',()=>mergeNext(q)));
+    body.append(tools);
+    const b=document.createElement('button');b.className='x';b.textContent='✕';b.title='ลบ';
+    b.onclick=()=>deleteCue(q);
+    d.append(t,body,b);box.append(d);
+  });
+  const hl=box.querySelector('.hl');
+  if(hl){hl.scrollIntoView({behavior:'smooth',block:'center'});lastAdded=null;const t0=hl.querySelector('textarea');if(t0&&!t0.value)t0.focus();}
+}
+$('selall').onchange=()=>{const on=$('selall').checked;cues.forEach(q=>q.sel=on);render();};
+
+/* ---------- แปลด้วย AI ---------- */
+const trlog=m=>$('trlog').textContent=m;
+// คำหยาบภาษาอังกฤษที่ "ไม่ควรเหลือ" ในคำแปล (ใช้ตรวจว่า AI แปลครบไหม)
+const PROF=/\b(fuck\w*|motherfuck\w*|shit\w*|bullshit|damn\w*|goddamn\w*|bitch\w*|bastard\w*|asshole\w*|ass|dick\w*|cock\w*|pussy|cunt\w*|whore\w*|slut\w*|piss\w*|crap)\b/i;
+// แปลเป็นชุด ถ้าชุดไหนล้มเหลวจะแบ่งครึ่งแล้วลองใหม่ จนเหลือทีละบรรทัด (กันบรรทัดเดียวที่ถูกปฏิเสธลากทั้งชุดล้ม) คืนจำนวนที่ล้มเหลว
+async function trChunk(chunk,before,target,extra,opt){
+  if(trCancel) return 0;
+  let res=null;
+  for(let a=0;a<2&&!res&&!trCancel;a++){
+    try{res=await aiTranslate(chunk.map(q=>q.text.trim()),before,target,extra,chunk.some(q=>q.spk)?{...opt,speakers:chunk.map(q=>q.spk||'')}:opt);}
+    catch(err){if(!err.parse) throw err;}
+  }
+  if(res){chunk.forEach((q,k)=>{q.tr=res[k];});return 0;}
+  if(trCancel) return 0;
+  if(chunk.length>1){
+    const h=chunk.length>>1;
+    return (await trChunk(chunk.slice(0,h),before,target,extra,opt))+(await trChunk(chunk.slice(h),before,target,extra,opt));
+  }
+  return 1;
+}
+$('trbtn').onclick=async()=>{
+  if(trBusy){trCancel=true;trlog('กำลังหยุดหลังชุดนี้…');return;}
+  const skip=$('trskip').checked;
+  const items=cues.filter(q=>q.sel&&q.text.trim()&&!(skip&&q.tr));
+  if(!items.length){trlog('ยังไม่ได้เลือกข้อความที่จะแปล (หรือข้อความที่เลือกแปลไปแล้ว)');return;}
+  if(!$('apikey').value.trim()){trlog('ยังไม่ได้ตั้งค่า API key — ใส่ที่ "ตั้งค่า AI" ด้านบน');needKey('ต้องใส่ API key ก่อนจึงจะแปลได้');return;}
+  trBusy=true;trCancel=false;$('trbtn').textContent='หยุดแปล';
+  const target=$('tlang').value.trim()||'Thai',extra=$('textra').value.trim();
+  const faithful=$('trfaith').checked,opt={faithful};
+  const CHUNK=25;let done=0,failed=0,leftover=0;
+  try{
+    for(let i=0;i<items.length&&!trCancel;i+=CHUNK){
+      const chunk=items.slice(i,i+CHUNK),at=cues.indexOf(chunk[0]);
+      const before=cues.slice(Math.max(0,at-3),at).map(q=>q.text.trim()).filter(Boolean);
+      const f=await trChunk(chunk,before,target,extra,opt);
+      if(!trCancel){failed+=f;done+=chunk.length-f;}
+      // ตรวจว่ายังมีคำหยาบภาษาอังกฤษค้างในคำแปลไหม → สั่งแปลซ้ำเฉพาะบรรทัดนั้นแบบเข้มขึ้น
+      if(faithful&&!/english/i.test(target)&&!trCancel){
+        const bad=chunk.filter(q=>q.tr&&PROF.test(q.tr));
+        if(bad.length){
+          await trChunk(bad,before,target,extra,{faithful:true,strict:true});
+          leftover+=bad.filter(q=>PROF.test(q.tr)).length;
+        }
+      }
+      trlog('แปลแล้ว '+done+'/'+items.length+(failed?' · ล้มเหลว '+failed:'')+(leftover?' · ยังมีคำหยาบค้างเป็นภาษาเดิม '+leftover:''));
+      render();
+    }
+    trlog((trCancel?'หยุดแล้ว · ':'เสร็จแล้ว · ')+'แปลได้ '+done+' ข้อความ'
+      +(failed?' · ล้มเหลว '+failed+' (AI ไม่ตอบ/ปฏิเสธ — กดแปลซ้ำ หรือลองสลับผู้ให้บริการ/โมเดลในตั้งค่า AI)':'')
+      +(leftover?' · ยังมีคำหยาบค้างเป็นภาษาเดิม '+leftover+' บรรทัด (แก้เองในช่องคำแปลได้)':''));
+  }catch(err){
+    trlog('AI ผิดพลาด: '+(err.message||err)+(done?' (แปลไปแล้ว '+done+' ข้อความ)':''));
+  }
+  trBusy=false;updateTrUi();
+};
+
+/* ---------- ดาวน์โหลด ---------- */
+function save(text,mime,ext){
+  const a=document.createElement('a'),u=URL.createObjectURL(new Blob(['\ufeff'+text],{type:mime+';charset=utf-8'}));
+  a.href=u;a.download=name+ext;document.body.append(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(u),1000);
+}
+const srtOf=f=>cues.map(q=>[q,f(q)]).filter(x=>x[1].trim())
+  .map((x,i)=>`${i+1}\n${fmt(x[0].start)} --> ${fmt(x[0].end)}\n${x[1].trim()}\n`).join('\n');
+$('dl').onclick=()=>save(srtOf(q=>q.text),'application/x-subrip','.srt');
+$('dltr').onclick=()=>save(srtOf(q=>q.tr||q.text),'application/x-subrip','.translated.srt');
+$('dlbi').onclick=()=>save(srtOf(q=>q.text.trim()+(q.tr?'\n'+q.tr.trim():'')),'application/x-subrip','.bilingual.srt');
+// .txt: [เวลาเริ่ม --> เวลาจบ] ข้อความ  (ถ้ามีคำแปลจะขึ้นบรรทัดถัดไปด้วย → )
+$('dltxt').onclick=()=>{
+  const one=x=>x.trim().replace(/\s*\n\s*/g,' ');
+  save(cues.filter(q=>q.text.trim()).map(q=>`[${fmt(q.start)} --> ${fmt(q.end)}] ${q.spk?q.spk+': ':''}${one(q.text)}`+(q.tr?`\n    → ${one(q.tr)}`:'')).join('\n')+'\n','text/plain','.txt');
+};
+
+/* ---------- ติดตั้งเป็นแอป + อัปเดตอัตโนมัติ (ทำงานเมื่อเปิดจากเว็บ https เท่านั้น) ---------- */
+function reloadPage(){location.reload();}
+let deferredInstall=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;$('installbtn').style.display='inline-block';});
+$('installbtn').onclick=async()=>{
+  if(!deferredInstall) return;
+  deferredInstall.prompt();try{await deferredInstall.userChoice;}catch(e){}
+  deferredInstall=null;$('installbtn').style.display='none';
+};
+(function(){
+  if(!/^https?:$/.test(location.protocol)) return;             // เปิดจากไฟล์ในเครื่อง: ไม่ใช้ระบบอัปเดต
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+  const hash=t=>{let h=5381;for(let i=0;i<t.length;i++) h=((h<<5)+h+t.charCodeAt(i))|0;return h;};
+  let base=null,last=0,shown=false;
+  const idle=()=>!cues.length&&$('stop').disabled&&!trBusy&&!playingCue;
+  function onNewVersion(){
+    if(idle()){toast('มีเวอร์ชันใหม่ กำลังอัปเดต…');setTimeout(reloadPage,900);return;}
+    if(shown) return;shown=true;                                // กำลังทำงาน/มีผลลัพธ์ค้าง → ไม่รีโหลดเอง ถามก่อน กันผลหาย
+    const bar=document.createElement('div');bar.className='updbar';
+    const t=document.createElement('span');t.textContent='มีเวอร์ชันใหม่ — ดาวน์โหลดผลลัพธ์ที่ต้องการเก็บก่อน แล้วกดอัปเดต (ผลลัพธ์ที่ยังไม่ส่งออกจะหายเมื่ออัปเดต)';
+    const go=document.createElement('button');go.textContent='อัปเดตเลย';go.onclick=reloadPage;
+    const later=document.createElement('button');later.className='g';later.textContent='ภายหลัง';later.onclick=()=>{bar.remove();shown=false;};
+    bar.append(t,go,later);document.body.append(bar);
+  }
+  async function check(){
+    if(Date.now()-last<20000) return;last=Date.now();
+    try{
+      const r=await fetch(location.pathname,{cache:'no-store'});if(!r.ok) return;
+      const h=hash(await r.text());
+      if(base===null){base=h;return;}
+      if(h!==base) onNewVersion();
+    }catch(e){}
+  }
+  check();
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible') check();});
+  setInterval(check,10*60*1000);
+})();
+</script>
+</body>
+</html>
