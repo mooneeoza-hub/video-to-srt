@@ -72,7 +72,7 @@ details.card[open] summary{margin-bottom:4px}
 <body>
 <main>
 <h1>สแกนตัวหนังสือจากวิดีโอ → .srt</h1>
-<button id="installbtn" class="g" style="display:none;margin-bottom:10px">📲 ติดตั้งเป็นแอป</button>
+<div class="row" style="margin:0 0 10px"><button id="projbtn" class="g">📂 งานที่บันทึกไว้ (0)</button><button id="installbtn" class="g" style="display:none">📲 ติดตั้งเป็นแอป</button></div>
 <p class="s">ประมวลผลในเบราว์เซอร์ของคุณทั้งหมด วิดีโอไม่ถูกอัปโหลดไปไหน (ต้องมีอินเทอร์เน็ตเพื่อโหลดตัว OCR ครั้งแรก)</p>
 
 <details class="card" id="aiset">
@@ -190,6 +190,7 @@ details.card[open] summary{margin-bottom:4px}
 
 <div class="card" id="out" style="display:none">
   <strong>ผลลัพธ์ (แก้ไขข้อความได้ · แตะเวลาเพื่อข้ามไปดูในวิดีโอ)</strong>
+  <div class="row" id="savebar"><button id="savebtn">💾 บันทึกงาน</button><span class="hint" id="savestat" style="margin:0">ยังไม่ได้บันทึก</span></div>
   <div id="trpanel">
     <div class="row">
       <label><input type="checkbox" id="selall"> เลือกทั้งหมด</label>
@@ -243,13 +244,14 @@ function setBusy(b){
 }
 $('file').onchange=e=>{
   const f=e.target.files[0]; if(!f) return;
-  name=f.name.replace(/\.[^.]+$/,'');curFile=f;
+  name=f.name.replace(/\.[^.]+$/,'');curFile=f;if(!cues.length) projId=null;
   if(srcUrl) URL.revokeObjectURL(srcUrl);
   setBusy(true);$('stop').disabled=true;
   v.onloadedmetadata=()=>{setBusy(false);$('stop').disabled=true;roi();log('ความยาว '+fmt(v.duration).slice(0,8))};
   v.onerror=()=>log('เปิดไฟล์วิดีโอนี้ไม่ได้ (เบราว์เซอร์อาจไม่รองรับ codec)');
   srcUrl=URL.createObjectURL(f);
   v.src=srcUrl;
+  offerRestoreForFile(f);
 };
 
 /* ---------- กรอบสแกน (หลายกรอบ ลาก/ย้าย/ปรับขนาดได้) ---------- */
@@ -1202,7 +1204,12 @@ $('srtfile').onchange=async e=>{
   const f=e.target.files[0];e.target.value='';              // เคลียร์ช่องเลือกไฟล์ จะได้เลือกไฟล์เดิมซ้ำได้
   if(!f) return;
   try{
-    const list=parseSub(await readTextFile(f));
+    const raw=await readTextFile(f),jt=raw.replace(/^\uFEFF/,'').trimStart();
+    if(jt.startsWith('{')){                                    // ไฟล์สำรองโปรเจกต์ที่ดาวน์โหลดจาก "งานที่บันทึกไว้"
+      let o=null;try{o=JSON.parse(jt);}catch(e){}
+      if(o&&o.v2srt){if(cues.length) saveProject(false);restoreProject(o);return;}
+    }
+    const list=parseSub(raw);
     if(!list.length){toast('ไม่พบข้อความในไฟล์นี้ (ต้องเป็น .srt / .vtt หรือ .txt ที่ส่งออกจากเครื่องมือนี้)');return;}
     let mode='replace';
     if(cues.length){mode=await askImport(list.length,f.name);if(!mode) return;}
@@ -1479,9 +1486,9 @@ $('trbtn').onclick=async()=>{
 };
 
 /* ---------- ดาวน์โหลด ---------- */
-function save(text,mime,ext){
+function save(text,mime,ext,base){
   const a=document.createElement('a'),u=URL.createObjectURL(new Blob(['\ufeff'+text],{type:mime+';charset=utf-8'}));
-  a.href=u;a.download=name+ext;document.body.append(a);a.click();a.remove();
+  a.href=u;a.download=(base||name)+ext;document.body.append(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(u),1000);
 }
 const srtOf=f=>cues.map(q=>[q,f(q)]).filter(x=>x[1].trim())
@@ -1494,6 +1501,125 @@ $('dltxt').onclick=()=>{
   const one=x=>x.trim().replace(/\s*\n\s*/g,' ');
   save(cues.filter(q=>q.text.trim()).map(q=>`[${fmt(q.start)} --> ${fmt(q.end)}] ${q.spk?q.spk+': ':''}${one(q.text)}`+(q.tr?`\n    → ${one(q.tr)}`:'')).join('\n')+'\n','text/plain','.txt');
 };
+
+/* ---------- บันทึกงาน / กู้คืนงาน ---------- */
+// เก็บในเบราว์เซอร์ของเครื่องนี้ (localStorage) บันทึกอัตโนมัติทุก 3 วินาทีที่มีการแก้ไข และตอนสลับแอป/ปิดหน้า
+// เก็บ: ผลลัพธ์ คำแปล ถังขยะ กรอบสแกน และตัวเลือกต่างๆ  ไม่เก็บ API key และไม่เก็บตัวไฟล์วิดีโอ (ต้องเลือกไฟล์เดิมใหม่)
+const PJ='v2srt_proj_',AUTOSAVE_MS=3000,MAX_PROJECTS=10;
+let projId=null,lastSavedSig='';
+const settingIds=['src','lang','mode','conf','typing','engine','alang','aeng','wsize','wsplit','aspk','tlang','textra','trfaith','trskip','prov','model'];
+const computeId=()=>curFile?'f:'+curFile.name+':'+curFile.size:'n:'+name;
+function snapshot(){
+  const st={};
+  settingIds.forEach(id=>{const el=$(id);if(el) st[id]=el.type==='checkbox'?el.checked:el.value;});
+  return {v2srt:1,id:projId,name,file:curFile?{name:curFile.name,size:curFile.size}:null,
+    cues:cues.map(q=>({...q})),trash:trash.slice(0,50).map(t=>({...t.q})),boxes:boxes.map(b=>({...b})),active,settings:st};
+}
+function listProjects(){
+  const out=[];
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);if(!k||k.indexOf(PJ)!==0) continue;
+      try{const r=JSON.parse(localStorage.getItem(k));if(r&&r.data) out.push(r);}catch(e){}
+    }
+  }catch(e){}
+  return out.sort((a,b)=>b.at-a.at);
+}
+function refreshProjBtn(){$('projbtn').textContent='📂 งานที่บันทึกไว้ ('+listProjects().length+')';}
+function updSaveUi(manual){
+  const t=new Date().toLocaleTimeString('th-TH',{hour12:false});
+  $('savestat').textContent='✓ บันทึกล่าสุด '+t+(manual?'':' (อัตโนมัติ)');
+  refreshProjBtn();
+}
+function saveProject(manual){
+  if(!cues.length&&!trash.length){if(manual) toast('ยังไม่มีผลลัพธ์ให้บันทึก');return false;}
+  if(!projId) projId=computeId();
+  const snap=snapshot(),body=JSON.stringify(snap);
+  if(!manual&&body===lastSavedSig) return true;
+  const rec=JSON.stringify({id:projId,name:snap.name,count:snap.cues.length,at:Date.now(),file:snap.file,data:snap});
+  try{localStorage.setItem(PJ+projId,rec);}
+  catch(e){toast('บันทึกไม่ได้ (พื้นที่เก็บเต็มหรือเบราว์เซอร์ปิดการเก็บข้อมูล) — ลบงานเก่าใน "งานที่บันทึกไว้" หรือโหลดไฟล์สำรอง');return false;}
+  lastSavedSig=body;
+  listProjects().slice(MAX_PROJECTS).forEach(r=>{try{localStorage.removeItem(PJ+r.id);}catch(e){}});   // เก็บแค่ 10 งานล่าสุด
+  updSaveUi(manual);return true;
+}
+function restoreProject(d){
+  if(!d||!Array.isArray(d.cues)) throw new Error('ไฟล์โปรเจกต์ไม่ถูกต้อง');
+  const st=d.settings||{};
+  for(const id of settingIds){
+    if(!(id in st)) continue;const el=$(id);if(!el) continue;
+    if(el.type==='checkbox') el.checked=!!st[id];else el.value=st[id];
+  }
+  $('src').onchange();$('aeng').onchange();aiStatus();     // ไม่เรียก mode/engine/prov.onchange เพราะจะรีเซ็ตค่าที่เพิ่งกู้คืน
+  boxes.length=0;
+  (d.boxes&&d.boxes.length?d.boxes:[{x:0,y:70,w:100,h:30}]).forEach(b=>boxes.push({x:+b.x||0,y:+b.y||0,w:+b.w||100,h:+b.h||30}));
+  active=Math.min(Math.max(0,d.active||0),boxes.length-1);R=boxes[active];renderBoxes();
+  cues=d.cues.map(q=>({...q}));trash.length=0;(d.trash||[]).forEach(q=>trash.push({q:{...q}}));undoStack.length=0;
+  name=d.name||name;projId=d.id||computeId();
+  render();lastSavedSig=JSON.stringify(snapshot());updSaveUi(true);
+  $('out').scrollIntoView({behavior:'smooth',block:'start'});
+  toast('กู้คืน '+cues.length+' ข้อความแล้ว'+(!curFile&&d.file?' · เลือกไฟล์วิดีโอเดิม ('+d.file.name+') เพื่อฟัง/ตรวจเวลาคู่กัน':''));
+}
+function openProject(rec){
+  if(cues.length&&projId!==rec.id) saveProject(false);       // กันงานปัจจุบันหาย
+  restoreProject(rec.data);
+}
+function fmtAt(t){try{return new Date(t).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});}catch(e){return new Date(t).toISOString();}}
+function offerRestoreForFile(f){
+  if(cues.length) return;
+  const rec=listProjects().find(r=>r.id==='f:'+f.name+':'+f.size);
+  if(!rec) return;
+  askChoice('พบงานที่บันทึกไว้ของวิดีโอนี้',rec.count+' ข้อความ · บันทึกเมื่อ '+fmtAt(rec.at)+' — กู้คืนไหม?',[{key:'restore',label:'กู้คืนงานนี้'}])
+    .then(k=>{if(k==='restore') openProject(rec);});
+}
+function openProjects(){
+  modal((card,close)=>{
+    const list=listProjects();
+    const h=document.createElement('strong');h.textContent='งานที่บันทึกไว้ ('+list.length+')';card.append(h);
+    if(!list.length){const e=document.createElement('div');e.className='hint';e.textContent='ยังไม่มีงานที่บันทึก — ระบบบันทึกให้อัตโนมัติเมื่อมีผลลัพธ์ หรือกด 💾 บันทึกงาน';card.append(e);}
+    list.forEach(r=>{
+      const row=document.createElement('div');row.className='titem';row.style.flexWrap='wrap';
+      const info=document.createElement('div');info.style.flex='1';info.style.minWidth='160px';
+      const t1=document.createElement('div');t1.textContent=r.name||'(ไม่มีชื่อ)';t1.style.wordBreak='break-word';
+      const t2=document.createElement('div');t2.className='mmeta';t2.textContent=r.count+' ข้อความ · '+fmtAt(r.at)+(r.file?' · วิดีโอ: '+r.file.name:'');
+      info.append(t1,t2);
+      const op=document.createElement('button');op.className='mini';op.textContent='เปิด';op.onclick=()=>{close();openProject(r);};
+      const bk=document.createElement('button');bk.className='g mini';bk.textContent='⬇ สำรอง';bk.title='ดาวน์โหลดเป็นไฟล์สำรอง (.json) นำเข้ากลับได้จากช่อง "นำเข้าซับที่มีอยู่แล้ว"';
+      bk.onclick=()=>save(JSON.stringify(r.data),'application/json','.v2s.json',(r.name||'project'));
+      const dl=document.createElement('button');dl.className='g mini';dl.textContent='🗑';dl.title='ลบงานนี้';
+      dl.onclick=async()=>{
+        const ok=await askConfirm('ลบงานที่บันทึกไว้นี้?',(()=>{const w=document.createElement('div');const m=document.createElement('div');m.className='mmeta';m.textContent=r.count+' ข้อความ · '+fmtAt(r.at);const x=document.createElement('div');x.className='mtext';x.textContent=r.name||'';w.append(m,x);return w;})(),'ลบ');
+        if(!ok) return;
+        try{localStorage.removeItem(PJ+r.id);}catch(e){}
+        if(projId===r.id){lastSavedSig='';}                   // งานที่เปิดอยู่จะถูกบันทึกใหม่อัตโนมัติถ้ายังมีการแก้ไข
+        refreshProjBtn();close();toast('ลบแล้ว');
+      };
+      row.append(info,op,bk,dl);card.append(row);
+    });
+    const f=document.createElement('div');f.className='row';
+    const cl=document.createElement('button');cl.className='g';cl.textContent='ปิด';cl.onclick=close;f.append(cl);card.append(f);
+  });
+}
+$('projbtn').onclick=openProjects;
+$('savebtn').onclick=()=>{if(saveProject(true)) toast('บันทึกงานแล้ว ('+cues.length+' ข้อความ)');};
+function autosaveTick(){if(cues.length||trash.length) saveProject(false);}
+setInterval(autosaveTick,AUTOSAVE_MS);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden') autosaveTick();});
+window.addEventListener('pagehide',autosaveTick);
+window.addEventListener('beforeunload',e=>{                  // กำลังสแกน/แปลอยู่ ปิดหน้าแล้วงานจะหาย → ให้เบราว์เซอร์ถามก่อน (มือถือบางรุ่นไม่แสดง)
+  if(!$('stop').disabled||trBusy){e.preventDefault();e.returnValue='';}
+});
+refreshProjBtn();
+setTimeout(()=>{                                              // เปิดหน้ามาใหม่และมีงานค้าง → เสนอกู้คืนงานล่าสุด
+  const last=listProjects()[0];
+  if(!last||cues.length||$('stop').disabled===false) return;
+  const bar=document.createElement('div');bar.className='updbar';bar.id='restorebar';
+  const t=document.createElement('span');t.textContent='มีงานที่บันทึกไว้: '+(last.name||'(ไม่มีชื่อ)')+' · '+last.count+' ข้อความ · '+fmtAt(last.at);
+  const go=document.createElement('button');go.textContent='กู้คืน';go.onclick=()=>{bar.remove();openProject(last);};
+  const all=document.createElement('button');all.className='g';all.textContent='ดูทั้งหมด';all.onclick=()=>{bar.remove();openProjects();};
+  const x=document.createElement('button');x.className='g';x.textContent='ปิด';x.onclick=()=>bar.remove();
+  bar.append(t,go,all,x);document.body.append(bar);
+},400);
 
 /* ---------- ติดตั้งเป็นแอป + อัปเดตอัตโนมัติ (ทำงานเมื่อเปิดจากเว็บ https เท่านั้น) ---------- */
 function reloadPage(){location.reload();}
@@ -1514,8 +1640,8 @@ $('installbtn').onclick=async()=>{
     if(idle()){toast('มีเวอร์ชันใหม่ กำลังอัปเดต…');setTimeout(reloadPage,900);return;}
     if(shown) return;shown=true;                                // กำลังทำงาน/มีผลลัพธ์ค้าง → ไม่รีโหลดเอง ถามก่อน กันผลหาย
     const bar=document.createElement('div');bar.className='updbar';
-    const t=document.createElement('span');t.textContent='มีเวอร์ชันใหม่ — ดาวน์โหลดผลลัพธ์ที่ต้องการเก็บก่อน แล้วกดอัปเดต (ผลลัพธ์ที่ยังไม่ส่งออกจะหายเมื่ออัปเดต)';
-    const go=document.createElement('button');go.textContent='อัปเดตเลย';go.onclick=reloadPage;
+    const t=document.createElement('span');t.textContent='มีเวอร์ชันใหม่ — กดอัปเดตเมื่อพร้อม ระบบจะบันทึกงานให้ก่อน (กู้คืนได้จาก 📂 งานที่บันทึกไว้ แต่ต้องเลือกไฟล์วิดีโอใหม่)';
+    const go=document.createElement('button');go.textContent='อัปเดตเลย';go.onclick=()=>{try{saveProject(true);}catch(e){}reloadPage();};
     const later=document.createElement('button');later.className='g';later.textContent='ภายหลัง';later.onclick=()=>{bar.remove();shown=false;};
     bar.append(t,go,later);document.body.append(bar);
   }
